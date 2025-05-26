@@ -238,7 +238,8 @@ Line 3, characters 31-32:
 Error: The value "x" has type "t0" = "(module M : T) -> M.t -> M.t"
        but an expression was expected of type
          "'a t5" = "(module M : T with type t = 'a) -> 'a -> 'a"
-       There is no type "t" in the first module type.
+       The constraint on "t" in the second module type is not compatible
+       with the declaration of type t in the first module type.
 |}]
 
 let id_fail2 (x : _ t5) : t0 = x
@@ -251,7 +252,8 @@ Error: The value "x" has type
          "'a t5" = "(module M : T with type t = 'a) -> 'a -> 'a"
        but an expression was expected of type
          "t0" = "(module M : T) -> M.t -> M.t"
-       There is no type "t" in the second module type.
+       The constraint on "t" in the first module type is not compatible
+       with the declaration of type t in the second module type.
 |}]
 
 (* This test check that no scope escape happens when trying to replace 'a by
