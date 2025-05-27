@@ -5964,34 +5964,39 @@ and subtype_labeled_list env trace labeled_tl1 labeled_tl2 constraints =
     constraints labeled_tl1 labeled_tl2
 
 and subtype_package env trace lvl1 pack1 lvl2 pack2 constraints =
-  try
-    let ntl1 = complete_type_list ~pos:Second env pack2.pack_constraints lvl1 pack1
-    and ntl2 =
-      complete_type_list ~pos:First env pack1.pack_constraints lvl2 pack2
-        ~allow_absent:true in
-    match ntl1, ntl2 with
-    | Error _, _ | _, Error _ -> raise Not_found
-    | Ok ntl1, Ok ntl2 ->
-    let constraints' =
-      List.map
-        (fun (n2,t2) -> (env, trace, List.assoc n2 ntl1, t2, !univar_pairs))
-        ntl2
-    in
-    if eq_package_path env pack1.pack_path pack2.pack_path
-    then constraints' @ constraints
-    else begin
-      (* need to check module subtyping *)
-      let snap = Btype.snapshot () in
-      match List.iter (fun (env, _, t1, t2, _) -> unify env t1 t2) constraints'
-      with
-      | () when Result.is_ok (!package_subtype env pack1 pack2) ->
-        Btype.backtrack snap; constraints' @ constraints
-      | () | exception Unify _ ->
-        Btype.backtrack snap; raise Not_found
-    end
-  with Not_found ->
-    (env, trace, newty (Tpackage pack1), newty (Tpackage pack2), !univar_pairs)
-      ::constraints
+  let ntl1 =
+    complete_type_list ~pos:Second env pack2.pack_constraints lvl1 pack1
+  and ntl2 =
+    complete_type_list ~pos:First env pack1.pack_constraints lvl2 pack2
+      ~allow_absent:true
+  in
+  match ntl1, ntl2 with
+  | Error e, _ | _, Error e ->
+      subtype_error ~env ~trace ~unification_trace:[First_class_module e]
+  | Ok ntl1, Ok ntl2 ->
+      let constraints' =
+        List.map
+          (fun (n2,t2) -> (env, trace, List.assoc n2 ntl1, t2, !univar_pairs))
+          ntl2
+      in
+      if eq_package_path env pack1.pack_path pack2.pack_path then
+        constraints' @ constraints
+      else
+        (* need to check module subtyping *)
+        let snap = Btype.snapshot () in
+        let apply_constraint (env,_,t1,t2,_) = unify env t1 t2 in
+        match List.iter apply_constraint constraints' with
+        | exception Unify {trace=unification_trace} ->
+            Btype.backtrack snap;
+            subtype_error ~env ~trace ~unification_trace
+        | () ->
+            match !package_subtype env pack1 pack2 with
+            | Ok () ->
+                Btype.backtrack snap; constraints' @ constraints
+            | Error e ->
+                Btype.backtrack snap;
+                subtype_error ~env ~trace
+                  ~unification_trace:[First_class_module e]
 
 and subtype_functor env trace ?id1 id pack u1 u2 constraints =
   let mty = modtype_of_package env Location.none pack in
