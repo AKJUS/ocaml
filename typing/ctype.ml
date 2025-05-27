@@ -3209,7 +3209,7 @@ let complete_type_list ~pos ?(allow_absent=false) env fl1 lv2 pack2 =
   | res -> Ok res
   | exception (Exit e) -> Error e
 
-let compare_package env unify_list lv1 pack1 lv2 pack2 =
+let compare_package env unify lv1 pack1 lv2 pack2 =
   let check = function
     | Error e -> raise_for Unify (First_class_module e)
     | Ok ntl -> ntl
@@ -3221,7 +3221,8 @@ let compare_package env unify_list lv1 pack1 lv2 pack2 =
   in
   let ntl2 = check ntl2 in
   let ntl1 = check ntl1 in
-  unify_list (List.map snd ntl1) (List.map snd ntl2);
+  (* ntl1 and ntl2 have the same length by construction *)
+  List.iter2 unify (List.map snd ntl1) (List.map snd ntl2);
   if eq_package_path env pack1.pack_path pack2.pack_path then Ok ()
   else Result.bind
       (!package_subtype env pack1 pack2)
@@ -3574,10 +3575,6 @@ and unify_list env tl1 tl2 =
     raise_unexplained_for Unify;
   List.iter2 (unify env) tl1 tl2
 
-and unify_list_same_length env tl1 tl2 =
-  assert (List.compare_lengths tl1 tl2 = 0);
-  List.iter2 (unify env) tl1 tl2
-
 and unify_labeled_list env labeled_tl1 labeled_tl2 =
   if 0 <> List.compare_lengths labeled_tl1 labeled_tl2 then
     raise_unexplained_for Unify;
@@ -3591,10 +3588,7 @@ and unify_labeled_list env labeled_tl1 labeled_tl2 =
     labeled_tl1 labeled_tl2
 
 and unify_package uenv lvl1 pack1 lvl2 pack2 =
-  match
-    compare_package (get_env uenv) (unify_list_same_length uenv)
-      lvl1 pack1 lvl2 pack2
-  with
+  match compare_package (get_env uenv) (unify uenv) lvl1 pack1 lvl2 pack2 with
   | Ok () -> ()
   | Error fm_err ->
       if not (in_pattern_mode uenv) then
@@ -4685,10 +4679,6 @@ and moregen_list type_pairs env tl1 tl2 =
     raise_unexplained_for Moregen;
   List.iter2 (moregen type_pairs env) tl1 tl2
 
-and moregen_list_same_length type_pairs env tl1 tl2 =
-  assert (List.compare_lengths tl1 tl2 = 0);
-  List.iter2 (moregen type_pairs env) tl1 tl2
-
 and moregen_labeled_list type_pairs env labeled_tl1
     labeled_tl2 =
   if 0 <> List.compare_lengths labeled_tl1 labeled_tl2 then
@@ -4702,7 +4692,7 @@ and moregen_labeled_list type_pairs env labeled_tl1
 
 and moregen_package type_pairs env lvl1 pack1 lvl2 pack2 =
   match
-    compare_package env (moregen_list_same_length type_pairs env)
+    compare_package env (moregen type_pairs env)
       lvl1 pack1 lvl2 pack2
   with
   | Ok () -> ()
@@ -5091,11 +5081,6 @@ let rec eqtype rename type_pairs subst env t1 t2 =
 and eqtype_list_same_length rename type_pairs subst env tl1 tl2 =
   List.iter2 (eqtype rename type_pairs subst env) tl1 tl2
 
-and eqtype_list rename type_pairs subst env tl1 tl2 =
-  if List.length tl1 <> List.length tl2 then
-    raise_unexplained_for Equality;
-  eqtype_list_same_length rename type_pairs subst env tl1 tl2
-
 and eqtype_labeled_list rename type_pairs subst env labeled_tl1 labeled_tl2 =
   if 0 <> List.compare_lengths labeled_tl1 labeled_tl2 then
     raise_unexplained_for Equality;
@@ -5108,7 +5093,7 @@ and eqtype_labeled_list rename type_pairs subst env labeled_tl1 labeled_tl2 =
 
 and eqtype_package rename type_pairs subst env lvl1 pack1 lvl2 pack2 =
   match
-    compare_package env (eqtype_list rename type_pairs subst env)
+    compare_package env (eqtype rename type_pairs subst env)
       lvl1 pack1 lvl2 pack2
   with
   | Ok () -> ()
