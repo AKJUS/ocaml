@@ -633,8 +633,8 @@ AC_DEFUN([OCAML_CHECK_LN_ON_WINDOWS], [
   AS_IF([m4_normalize(MSYS=winsymlinks:nativestrict
                       CYGWIN=winsymlinks:nativestrict
                       ln -sf configure conftestLink 2>/dev/null)],
-    [ln='ln -sf'],
-    [ln='cp -pf']
+    [LN_S='ln -sf'],
+    [LN_S='cp -pRf']
   )
   AC_MSG_RESULT([$ln])
 ])

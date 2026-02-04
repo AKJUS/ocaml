@@ -210,7 +210,7 @@ BUILD_TRIPLET = @build@
 ZINC_RUNTIME_ID = @zinc_runtime_id@
 
 # Platform-dependent command to create symbolic links
-LN = @ln@
+LN_S = @LN_S@
 
 # Tool to generate manifests for managed assemblies and unmanaged side-by-side
 # assemblies, for the Windows targets.
