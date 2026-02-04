@@ -220,6 +220,7 @@ AC_SUBST([shebangscripts])
 AC_SUBST([launch_method])
 AC_SUBST([launch_method_target])
 AC_SUBST([AR])
+AC_SUBST([ARFLAGS])
 AC_SUBST([mklib])
 AC_SUBST([supports_shared_libraries])
 AC_SUBST([natdynlink])
@@ -483,6 +484,8 @@ AS_CASE([$target],
 
 # Environment variables that are taken into account
 
+AC_ARG_VAR([AR], [Archive-maintaining program])
+AC_ARG_VAR([ARFLAGS], [Flags to give the archive-maintaining program])
 AC_ARG_VAR([AS], [which assembler to use])
 AC_ARG_VAR([ASPP], [which assembler (with preprocessor) to use])
 AC_ARG_VAR([PARTIALLD], [how to build partial (relocatable) object files])
@@ -903,7 +906,7 @@ AS_CASE([$target],
   # In config/Makefile.mingw*, we had:
   # TARGET=i686-w64-mingw32 and x86_64-w64-mingw32
   # TOOLPREF=$(TARGET)-
-  # ARCMD=$(TOOLPREF)ar
+  # AR=$(TOOLPREF)ar
   # However autoconf and libtool seem to use ar
   # So we let them do, at the moment
   [*-pc-windows],
@@ -917,7 +920,8 @@ AS_CASE([$target],
       mklib="link -lib -nologo $machine /out:\$(1) \$(2)"
     ],
   [
-    mklib="rm -f \$(1) && ${AR} rc \$(1) \$(2)"
+    : ${ARFLAGS:=rc}
+    mklib="rm -f \$(1) && ${AR} ${ARFLAGS} \$(1) \$(2)"
   ])
 
 ## In cross-compilation mode, can we run executables produced?

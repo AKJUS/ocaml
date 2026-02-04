@@ -75,7 +75,8 @@ LDFLAGS?=@LDFLAGS@
 CPP=@CPP@
 
 ### How to invoke ar
-ARCMD=@AR@
+AR=@AR@
+ARFLAGS=@ARFLAGS@
 
 ### Extension of object files
 O=@OBJEXT@
@@ -225,6 +226,10 @@ BYTECODE_RUNTIME_ID=@bytecode_runtime_id@
 NATIVE_RUNTIME_ID=@native_runtime_id@
 
 # Deprecated variables
+
+## Variables deprecated since OCaml 5.6
+
+ARCMD=$(AR)
 
 ## Variables deprecated since OCaml 5.3
 

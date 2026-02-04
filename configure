@@ -892,6 +892,7 @@ natdynlinkopts
 natdynlink
 supports_shared_libraries
 mklib
+ARFLAGS
 AR
 launch_method_target
 launch_method
@@ -1083,6 +1084,8 @@ enable_libtool_lock
       ac_precious_vars='build_alias
 host_alias
 target_alias
+AR
+ARFLAGS
 AS
 ASPP
 PARTIALLD
@@ -1814,6 +1817,8 @@ Optional Packages:
   --with-odoc
 
 Some influential environment variables:
+  AR          Archive-maintaining program
+  ARFLAGS     Flags to give the archive-maintaining program
   AS          which assembler to use
   ASPP        which assembler (with preprocessor) to use
   PARTIALLD   how to build partial (relocatable) object files
@@ -3594,6 +3599,7 @@ LINEAR_MAGIC_NUMBER=Caml1999L038
 
 
 
+
  # TODO: rename this variable
 
 
@@ -4073,6 +4079,8 @@ case $target in #(
 esac
 
 # Environment variables that are taken into account
+
+
 
 
 
@@ -15206,7 +15214,7 @@ case $target in #(
   # In config/Makefile.mingw*, we had:
   # TARGET=i686-w64-mingw32 and x86_64-w64-mingw32
   # TOOLPREF=$(TARGET)-
-  # ARCMD=$(TOOLPREF)ar
+  # AR=$(TOOLPREF)ar
   # However autoconf and libtool seem to use ar
   # So we let them do, at the moment
   *-pc-windows) :
@@ -15224,7 +15232,8 @@ fi
      ;; #(
   *) :
 
-    mklib="rm -f \$(1) && ${AR} rc \$(1) \$(2)"
+    : ${ARFLAGS:=rc}
+    mklib="rm -f \$(1) && ${AR} ${ARFLAGS} \$(1) \$(2)"
    ;;
 esac
 
