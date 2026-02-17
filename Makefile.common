@@ -218,6 +218,8 @@ INSTALL_DESPATCH_install_MKDIR = \
   $(MKDIR) $(call QUOTE_SINGLE,$(INSTALL_SECTION_$(1))$(addprefix /,$(2))) \
     $(SH_AND)
 
+LINK_IN = cd $(1) && $(LN_S) $(2) .
+
 MK_LINK = \
   (cd "$(INSTALL_SECTION_$(2))$(addprefix /,$(3))" && \
     $(LN_S) $(call QUOTE_SINGLE,$(1)) $(call QUOTE_SINGLE,$(4)))

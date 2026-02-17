@@ -721,7 +721,7 @@ coldstart: boot/ocamlrun$(EXE) runtime/libcamlrun.$(A)
 	$(MAKE) -C stdlib OCAMLRUN='$$(ROOTDIR)/$<' USE_BOOT_OCAMLC=true all
 	rm -f $(addprefix boot/, libcamlrun.$(A) $(LIBFILES))
 	cp $(addprefix stdlib/, $(LIBFILES)) boot
-	cd boot && $(LN_S) ../runtime/libcamlrun.$(A) .
+	$(call LINK_IN, boot, ../runtime/libcamlrun.$(A))
 
 # Recompile the core system using the bootstrap compiler
 .PHONY: coreall
@@ -1108,7 +1108,7 @@ endif
 # to add otherlibs/dynlink/native to the search path as well
 
 otherlibs/dynlink/dynlink.cmx : otherlibs/dynlink/native/dynlink.cmx
-	cd otherlibs/dynlink && $(LN_S) native/dynlink.cmx .
+	$(call LINK_IN, otherlibs/dynlink, native/dynlink.cmx)
 
 DYNLINK_DEPEND_DUMMY_FILES = \
   otherlibs/dynlink/dynlink.ml \
@@ -1153,28 +1153,28 @@ beforedepend:: lambda/runtimedef.ml
 # Choose the right machine-dependent files
 
 asmcomp/arch.mli: asmcomp/$(ARCH)/arch.mli
-	@cd asmcomp && $(LN_S) $(ARCH)/arch.mli .
+	@$(call LINK_IN, asmcomp, $(ARCH)/arch.mli)
 
 asmcomp/arch.ml: asmcomp/$(ARCH)/arch.ml
-	@cd asmcomp && $(LN_S) $(ARCH)/arch.ml .
+	@$(call LINK_IN, asmcomp, $(ARCH)/arch.ml)
 
 asmcomp/proc.ml: asmcomp/$(ARCH)/proc.ml
-	@cd asmcomp && $(LN_S) $(ARCH)/proc.ml .
+	@$(call LINK_IN, asmcomp, $(ARCH)/proc.ml)
 
 asmcomp/selection.ml: asmcomp/$(ARCH)/selection.ml
-	@cd asmcomp && $(LN_S) $(ARCH)/selection.ml .
+	@$(call LINK_IN, asmcomp, $(ARCH)/selection.ml)
 
 asmcomp/CSE.ml: asmcomp/$(ARCH)/CSE.ml
-	@cd asmcomp && $(LN_S) $(ARCH)/CSE.ml .
+	@$(call LINK_IN, asmcomp, $(ARCH)/CSE.ml)
 
 asmcomp/reload.ml: asmcomp/$(ARCH)/reload.ml
-	@cd asmcomp && $(LN_S) $(ARCH)/reload.ml .
+	@$(call LINK_IN, asmcomp, $(ARCH)/reload.ml)
 
 asmcomp/scheduling.ml: asmcomp/$(ARCH)/scheduling.ml
-	@cd asmcomp && $(LN_S) $(ARCH)/scheduling.ml .
+	@$(call LINK_IN, asmcomp, $(ARCH)/scheduling.ml)
 
 asmcomp/stackframe.ml: asmcomp/$(ARCH)/stackframe.ml
-	@cd asmcomp && $(LN_S) $(ARCH)/stackframe.ml .
+	@$(call LINK_IN, asmcomp, $(ARCH)/stackframe.ml)
 
 # Preprocess the code emitters
 cvt_emit = tools/cvt_emit$(EXE)
@@ -1699,7 +1699,7 @@ runtime: stdlib/libcamlrun.$(A)
 .PHONY: makeruntime
 makeruntime: runtime-all
 stdlib/libcamlrun.$(A): runtime-all
-	cd stdlib && $(LN_S) ../runtime/libcamlrun.$(A) .
+	$(call LINK_IN, stdlib, ../runtime/libcamlrun.$(A))
 clean::
 	rm -f $(addprefix runtime/, *.o *.obj *.a *.lib *.so *.dll)
 	rm -f $(addprefix runtime/, ocamlrun ocamlrund ocamlruni ocamlruns sak)
@@ -1720,9 +1720,9 @@ runtimeopt: stdlib/libasmrun.$(A)
 .PHONY: makeruntimeopt
 makeruntimeopt: runtime-allopt
 stdlib/libasmrun.$(A): runtime-allopt
-	cd stdlib && $(LN_S) ../runtime/libasmrun.$(A) .
+	$(call LINK_IN, stdlib, ../runtime/libasmrun.$(A))
 stdlib/libcomprmarsh.$(A): runtime/libcomprmarsh.$(A)
-	cd stdlib && $(LN_S) ../runtime/libcomprmarsh.$(A) .
+	$(call LINK_IN, stdlib, ../runtime/libcomprmarsh.$(A))
 
 clean::
 	rm -f stdlib/libasmrun.a stdlib/libasmrun.lib
