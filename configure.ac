@@ -491,7 +491,7 @@ AC_ARG_VAR([ASPP], [which assembler (with preprocessor) to use])
 AC_ARG_VAR([PARTIALLD], [how to build partial (relocatable) object files])
 AC_ARG_VAR([RC], [which resource compiler to use])
 AC_ARG_VAR([MANIFEST_TOOL], [which manifest generator to use])
-
+AC_ARG_VAR([STRIP], [Program used to perform stripping])
 AC_ARG_VAR([FLEXLINKFLAGS],
   [Supplementary flags passed to flexlink (Windows targets)])
 

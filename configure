@@ -751,7 +751,6 @@ NMEDIT
 DSYMUTIL
 AWK
 RANLIB
-STRIP
 ac_ct_AR
 DLLTOOL
 OBJDUMP
@@ -784,6 +783,7 @@ COMPILER_NATIVE_CFLAGS
 COMPILER_BYTECODE_CPPFLAGS
 COMPILER_BYTECODE_CFLAGS
 FLEXLINKFLAGS
+STRIP
 MANIFEST_TOOL
 RC
 PARTIALLD
@@ -1091,6 +1091,7 @@ ASPP
 PARTIALLD
 RC
 MANIFEST_TOOL
+STRIP
 FLEXLINKFLAGS
 COMPILER_BYTECODE_CFLAGS
 COMPILER_BYTECODE_CPPFLAGS
@@ -1825,6 +1826,7 @@ Some influential environment variables:
   RC          which resource compiler to use
   MANIFEST_TOOL
               which manifest generator to use
+  STRIP       Program used to perform stripping
   FLEXLINKFLAGS
               Supplementary flags passed to flexlink (Windows targets)
   COMPILER_BYTECODE_CFLAGS
