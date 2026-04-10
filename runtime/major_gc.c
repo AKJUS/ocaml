@@ -756,14 +756,16 @@ static int no_orphaned_work (void)
     atomic_load_acquire(&orph_structs.final_info) == NULL;
 }
 
-static void adopt_orphaned_work (int expected_status)
+static void adopt_orphaned_work (void)
 {
   caml_domain_state* domain_state = Caml_state;
   value orph_ephe_list_live;
   struct caml_final_info *f, *myf, *temp;
 
 #ifdef DEBUG
-  orph_ephe_list_verify_status(expected_status);
+  /* We mark ephemerons before orphaning them,
+     and always re-adopt them during the same cycle. */
+  orph_ephe_list_verify_status(caml_global_heap_state.MARKED);
 #endif
 
   if (no_orphaned_work())
@@ -1772,18 +1774,8 @@ void caml_mark_roots_stw (int participant_count,
 
     latest_sweep_allocs = diffmod (work_counter, work_counter_at_sweep_start);
 
-    /* Adopt orphaned work from domains that were spawned and terminated in the
-       previous cycle. There must be no orphaned work remaining when this phase
-       change takes place because orphaned work contains roots.
-
-       [adopt_orphaned_work] also verifies that the ephemerons to be adopted
-       all have status [UNMARKED] in this cycle.
-
-       Note that ephemerons are not orphaned in [Phase_sweep_main]. When
-       orphaned, ephemerons and their data are [MARKED]. Any unadopted
-       ephemerons must come from last cycle. Due to the GC cycling, the
-       [MARKED] ephemerons must have status [UNMARKED] now. */
-    adopt_orphaned_work (caml_global_heap_state.UNMARKED);
+    /* Orphaned work may contain roots so we adopt them first. */
+    adopt_orphaned_work();
 
     global_prepare_for_ephe_marking(participant_count);
   }
@@ -2267,7 +2259,7 @@ mark_again:
     }
 
     if (!caml_domain_is_terminating()){
-      adopt_orphaned_work(caml_global_heap_state.MARKED);
+      adopt_orphaned_work();
     }
 
     /* Ephemerons */
