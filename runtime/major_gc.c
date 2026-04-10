@@ -152,6 +152,14 @@ Caml_inline char caml_gc_phase_char(int may_access_gc_phase) {
   }
 }
 
+static bool is_complete_phase_sweep_and_mark_main (void);
+static bool is_complete_phase_mark_final (void);
+static bool is_complete_phase_sweep_ephe (void);
+
+static bool is_complete_last_phase (void) {
+  return is_complete_phase_sweep_ephe();
+}
+
 /*******************************************************************************
  * Prefetching
  ******************************************************************************/
@@ -1908,7 +1916,9 @@ struct cycle_callback_params {
   int force_compaction;
 };
 
-static void stw_cycle_all_domains(
+static atomic_bool can_cycle_all_domains;
+
+static void stw_try_cycle_all_domains(
   caml_domain_state* domain, void* args,
   int participating_count,
   caml_domain_state** participating)
@@ -1916,6 +1926,23 @@ static void stw_cycle_all_domains(
   /* We copy params because the stw leader may leave early. No barrier needed
      because there's one in the minor gc and after. */
   struct cycle_callback_params params = *((struct cycle_callback_params*)args);
+
+  /* It is possible that a domain invalidated the end-of-phase
+     condition while we were waiting for the STW section to start.
+     In this case we return immediately without actually ending the cycle. */
+  Caml_global_barrier_if_final(participating_count) {
+    /* We check [is_complete_last_phase] from within the STW section.
+       Otherwise a domain could make the last phase incomplete before joining
+       the STW section, invalidating the previous checks of other domains.
+
+       We check inside a barrier. Otherwise a domain could see an incomplete
+       phase, leave the STW section, and then make the last phase
+       complete. This would result in inconsistent behaviors with respects to
+       domains that have not reached the check yet -- some domains would exit
+       and some would stay and complete the cycle, which is incorrect. */
+    can_cycle_all_domains = is_complete_last_phase();
+  }
+  if (!can_cycle_all_domains) return;
 
   /* TODO: Not clear this memprof work is really part of the "cycle"
    * operation. It's more like ephemeron-cleaning really. An earlier
@@ -2334,23 +2361,29 @@ mark_again:
               sweep_work, mark_work,
               domain_state->stat_blocks_marked - blocks_marked_before);
 
-  if (mode != Slice_opportunistic && is_complete_phase_sweep_ephe()) {
+  if (mode != Slice_opportunistic && is_complete_last_phase()) {
     /* To handle the case where multiple domains try to finish the major cycle
        simultaneously, we loop until the current cycle has ended, ignoring
-       whether [caml_try_run_on_all_domains] succeeds. */
+       whether [caml_try_run_on_all_domains] succeeds.
+
+       If the phase becomes incomplete again (for example if a domain
+       adds orphaned work), we give up on finishing the cycle now. */
+
     saved_major_cycle = caml_major_cycles_completed;
 
     struct cycle_callback_params params;
     params.force_compaction = force_compaction;
 
-    while (saved_major_cycle == caml_major_cycles_completed) {
+    while (saved_major_cycle == caml_major_cycles_completed
+           && is_complete_last_phase())
+    {
       if (barrier_participants) {
-        stw_cycle_all_domains
+        stw_try_cycle_all_domains
               (domain_state, (void*)&params,
                 participant_count, barrier_participants);
       } else {
         caml_try_run_on_all_domains
-              (&stw_cycle_all_domains, (void*)&params, 0);
+              (&stw_try_cycle_all_domains, (void*)&params, 0);
       }
     }
   }
