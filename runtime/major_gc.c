@@ -2008,7 +2008,7 @@ static void stw_cycle_all_domains(
  * Major GC phases
  ******************************************************************************/
 
-static int is_complete_phase_sweep_and_mark_main (void)
+static bool is_complete_phase_sweep_and_mark_main (void)
 {
   return
     /* Marking is done */
@@ -2027,7 +2027,7 @@ static int is_complete_phase_sweep_and_mark_main (void)
     no_orphaned_work();
 }
 
-static int is_complete_phase_mark_final (void)
+static bool is_complete_phase_mark_final (void)
 {
   return
     /* updated finalise first values */
@@ -2045,7 +2045,7 @@ static int is_complete_phase_mark_final (void)
     no_orphaned_work();
 }
 
-static int is_complete_phase_sweep_ephe (void)
+static bool is_complete_phase_sweep_ephe (void)
 {
   return
     /* All domains have swept their ephemerons */
