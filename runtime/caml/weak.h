@@ -47,6 +47,7 @@ struct caml_ephe_info {
   uintnat round;
   /* Records the number of the round of ephemeron marking most
    * recently completed in the current cycle. */
+
   struct {
     value* todop;
     uintnat round;
