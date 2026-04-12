@@ -353,9 +353,6 @@ static void global_prepare_for_ephe_marking (int num_domains_in_stw) {
                            num_domains_in_stw);
   caml_atomic_counter_init(&ephe_round_info.round, 1);
   caml_atomic_counter_init(&ephe_round_info.num_domains_done, 0);
-  caml_atomic_counter_init(&num_domains_to_ephe_sweep, 0);
-  /* Will be set to the correct number when switching to
-     [Phase_sweep_ephe] */
 }
 
 /* Prepare to mark ephemerons by making all 'live' ephes become 'todo' */
@@ -1934,7 +1931,6 @@ static void stw_cycle_all_domains(
              caml_atomic_counter_value(&ephe_round_info.num_domains_done));
   CAMLassert(caml_atomic_counter_value(&num_domains_to_mark) == 0);
   CAMLassert(caml_atomic_counter_value(&num_domains_to_sweep) == 0);
-  CAMLassert(caml_atomic_counter_value(&num_domains_to_ephe_sweep) == 0);
 
   caml_empty_minor_heap_no_major_slice_from_stw
                         (domain, (void*)0, participating_count, participating);
