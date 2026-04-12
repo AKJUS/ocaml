@@ -391,9 +391,10 @@ static void ephe_next_round (void)
 
 static void ephe_todo_list_emptied (void)
 {
-  /* If we haven't started marking, the todo list can grow (during ephemeron
-     allocation), so we should not yet announce that it has emptied */
-  CAMLassert (caml_marking_started());
+  /* This function is intended to be used during ephemeron marking,
+     not ephemeron sweeping. */
+  CAMLassert (caml_ephe_marking_ongoing());
+
   caml_plat_lock_blocking(&ephe_lock);
 
   /* Force next ephemeron marking round in order to avoid reasoning about
@@ -494,7 +495,7 @@ static intnat ephe_mark (intnat budget, uintnat round,
   caml_domain_state* domain_state = Caml_state;
   size_t scanned = 0, preserved = 0;
 
-  CAMLassert(caml_marking_started());
+  CAMLassert(caml_ephe_marking_ongoing());
   if (domain_state->ephe_info->cursor.round == round &&
       !force_alive) {
     prev_linkp = domain_state->ephe_info->cursor.todop;
@@ -656,12 +657,31 @@ void caml_orphan_ephemerons (caml_domain_state* domain_state)
       ephe_info->must_sweep_ephe == 0)
     return;
 
-  /* Force all ephemerons and their data on todo list to be alive */
-  if (ephe_info->todo) {
-    while (ephe_info->todo) {
-      ephe_mark (100000, 0, EPHE_MARK_FORCE_ALIVE);
+  if (caml_ephe_marking_ongoing()) {
+    if (ephe_info->todo) {
+      /* Force all ephemerons and their data on todo list to be alive */
+      while (ephe_info->todo) {
+        ephe_mark(100000, 0, EPHE_MARK_FORCE_ALIVE);
+      }
+      ephe_todo_list_emptied ();
     }
-    ephe_todo_list_emptied ();
+  } else if (caml_gc_phase == Phase_sweep_ephe) {
+    if (domain_state->ephe_info->must_sweep_ephe) {
+      domain_state->ephe_info->must_sweep_ephe = 0;
+      prepare_for_ephe_sweeping(domain_state);
+    }
+    if (ephe_info->todo) {
+      /* Ensure that the ephemerons of this domain are swept/cleaned, in
+         case they stay orphaned until the next GC cycle. This mirrors
+         the logic in [major_collection_slice] for [Phase_sweep_ephe]. */
+      while (ephe_info->todo) {
+        ephe_sweep(domain_state, 100000);
+      }
+      (void)caml_atomic_counter_decr(&num_domains_to_ephe_sweep);
+    }
+  } else {
+    /* other phases do not use a ephemeron todo-list */
+    CAMLassert(ephe_info->todo == 0);
   }
   CAMLassert (ephe_info->todo == 0);
 
@@ -675,10 +695,6 @@ void caml_orphan_ephemerons (caml_domain_state* domain_state)
     caml_plat_unlock(&orphaned_lock);
   }
 
-  if (ephe_info->must_sweep_ephe) {
-    ephe_info->must_sweep_ephe = 0;
-    (void)caml_atomic_counter_decr(&num_domains_to_ephe_sweep);
-  }
   CAMLassert (ephe_info->must_sweep_ephe == 0);
   CAMLassert (ephe_info->live == 0);
   CAMLassert (ephe_info->todo == 0);
