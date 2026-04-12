@@ -329,9 +329,8 @@ extern value caml_ephe_none; /* See weak.c */
 
 static struct {
   atomic_uintnat num_domains_todo;
-  /* Number of domains that need to mark their ephemerons in the
-   * current major GC cycle. This field is decremented when a domain's
-   * todo list becomes empty.  */
+  /* Number of domains that have a non-empty todo list for ephemeron marking.
+   * (unspecified outside the marking phase) */
 
   atomic_uintnat round;
   /* Current ephemeron round number */
@@ -364,6 +363,9 @@ static void prepare_for_ephe_marking(caml_domain_state *domain)
   domain->ephe_info->round = 0;
   domain->ephe_info->cursor.todop = NULL;
   domain->ephe_info->cursor.round = 0;
+
+  if (!domain->ephe_info->todo)
+    caml_atomic_counter_decr(&ephe_round_info.num_domains_todo);
 }
 
 /* Move to the next global ephemeron round. Called whenever any domain
@@ -1771,6 +1773,8 @@ void caml_mark_roots_stw (int participant_count,
        ephemerons must come from last cycle. Due to the GC cycling, the
        [MARKED] ephemerons must have status [UNMARKED] now. */
     adopt_orphaned_work (caml_global_heap_state.UNMARKED);
+
+    global_prepare_for_ephe_marking(participant_count);
   }
 
   caml_domain_state* domain = Caml_state;
@@ -1802,9 +1806,6 @@ void caml_mark_roots_stw (int participant_count,
 
   caml_gc_log("Marking started, %ld entries on mark stack",
               (long)domain->mark_stack->count);
-
-  if (domain->ephe_info->todo == (value) NULL)
-    ephe_todo_list_emptied();
 
   /* Wait until global roots are marked before leaving the slice,
      using the time to do some opportunistic work. Mutators can alter
@@ -1891,7 +1892,6 @@ static void cycle_major_heap_from_stw_single(
                work_counter_at_sweep_start);
   work_counter_min_before_mark = work_counter + caml_small_heap_limit;
   atomic_store(&caml_gc_mark_phase_requested, 0);
-  global_prepare_for_ephe_marking(num_domains_in_stw);
 
   caml_atomic_counter_init(&num_domains_to_final_update_first,
                            num_domains_in_stw);
@@ -2525,7 +2525,6 @@ int caml_init_major_gc(caml_domain_state* d) {
     d->sweeping_done = 1;
     d->marking_done = 0;
     (void)caml_atomic_counter_incr(&num_domains_to_mark);
-    (void)caml_atomic_counter_incr(&ephe_round_info.num_domains_todo);
   } else {
     /* This fresh domain will allocate MARKED in this cycle,
      * so doesn't need to mark. */
