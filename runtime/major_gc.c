@@ -2238,7 +2238,7 @@ mark_again:
     }
 
     /* Ephemerons */
-    if (caml_gc_phase != Phase_sweep_ephe) {
+    if (caml_ephe_marking_ongoing()) {
       /* Ephemeron Marking */
       saved_ephe_round = caml_atomic_counter_value(&ephe_round_info.round);
       if (domain_state->ephe_info->todo != (value) NULL &&
