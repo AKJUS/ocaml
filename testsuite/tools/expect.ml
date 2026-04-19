@@ -18,15 +18,45 @@
    successful if there is no differences between the two files.
 
    An [%%expect] node always contains both the expected outcome with and
-   without -principal. When the two differ the expectation is written as
-   follows:
+   without -principal or -rectypes. When they differ the expectation
+   is written as follows:
 
    {[
      [%%expect {|
-     output without -principal
+     output without flags
      |}, Principal{|
      output with -principal
      |}]
+   ]}
+
+   {[
+     [%%expect {|
+     output without flags
+     |}, Rectypesl{|
+     output with -rectypes
+     |}]
+   ]}
+
+   In case addional flags are used, for example when manually enabled,
+   any flag combinations are combined with a dot (".") as separator.
+
+   {[
+     [%%expect {|
+     output without flags
+     |}, Principal.Rectypes{|
+     output with -principal and -rectypes
+     |}]
+   ]}
+
+   If multiple such combinations result in the same output, then they
+   are displayed as a tuple.
+
+   {[
+     [%%expect {|
+     output without flags
+     |}, (Principal, Rectypes){|
+     output with -principal or -rectypes
+     |}
    ]}
 *)
 
@@ -40,12 +70,72 @@ type string_constant =
   ; tag : string
   }
 
+let empty_str = { str = ""; tag = "" }
+
+module Clflag = struct
+  type t =
+    | Principal
+    | Rectypes
+    | Classic
+
+  let to_string = function
+    | Principal -> "Principal"
+    | Rectypes -> "Rectypes"
+    | Classic -> "Classic"
+
+  module Set = struct
+    module T = Set.Make(struct
+        type nonrec t = t
+        let compare = compare
+      end)
+    include T
+
+    module Map = Map.Make(T)
+
+    let original = ref empty
+
+    let get_current () =
+      List.fold_left ~f:union
+        [ if !Clflags.principal then singleton Principal else empty
+        ; if !Clflags.recursive_types then singleton Rectypes else empty
+        ; if !Clflags.classic then singleton Classic else empty
+        ]
+        ~init:empty
+
+    let set_current t =
+      Clflags.principal := mem Principal t;
+      Clflags.recursive_types := mem Rectypes t;
+      Clflags.classic := mem Classic t;
+      ()
+
+    let to_string c =
+      fold (fun cl acc ->
+          (if acc = "" then "" else acc ^ ".") ^ to_string cl
+        ) c ""
+
+    let of_longident ~loc lid =
+      List.fold_left
+        ~f:(fun acc s ->
+            match s with
+            | "Principal" -> add Principal acc
+            | "Rectypes" -> add Rectypes acc
+            | "Classic" -> add Classic acc
+            | other -> Location.raise_errorf ~loc "unknown flag: %s" other)
+        ~init:empty (Longident.flatten lid)
+  end
+end
+
+
 type expectation =
   { extid_loc   : Location.t (* Location of "expect" in "[%%expect ...]" *)
   ; payload_loc : Location.t (* Location of the whole payload *)
-  ; normal      : string_constant (* expectation without -principal *)
-  ; principal   : string_constant (* expectation with -principal *)
+  ; text        : string_constant Clflag.Set.Map.t
   }
+
+let expectation_equal a b =
+  a.extid_loc = b.extid_loc &&
+  a.payload_loc = b.payload_loc &&
+  Clflag.Set.Map.equal (fun a b -> a.str = b.str && a.tag = b.tag) a.text b.text
 
 (* A list of phrases with the expected toplevel output *)
 type chunk =
@@ -53,50 +143,177 @@ type chunk =
   ; expectation : expectation
   }
 
-type correction =
-  { corrected_expectations : expectation list
-  ; trailing_output        : string
-  }
+module Corrected = struct
+  type 'a t =
+    { original : 'a
+    ; corrected : 'a
+    }
+end
+
+module Correction = struct
+  type 'a t =
+    { corrected_expectations : 'a list
+    ; trailing_output        : string_constant Clflag.Set.Map.t
+    }
+
+  module LocationMap = Map.Make(struct
+      include Location
+
+      let compare = compare
+    end)
+
+  (* merge expectations, filtering out any where the merged expectation
+     equals the uncorrected original *)
+  let merge clist =
+    let merge_text ?(loc = Location.none) a b =
+      Clflag.Set.Map.merge
+        (fun key text1 text2 ->
+           match text1, text2 with
+           | None, None -> None
+           | (Some _ as text, None)
+           | None, (Some _ as text) -> text
+           | Some text1 as text, Some text2 when text1 = text2 ->
+               text
+           | _ -> Location.raise_errorf
+                    ~loc
+                    "conflicting outputs for %s" (Clflag.Set.to_string key)
+        ) a b
+    in
+    let corrected_expectations, trailing_output =
+      List.fold_left
+        ~f:(fun (cmap, tmap) { corrected_expectations; trailing_output } ->
+            List.fold_left
+              ~f:(fun acc { Corrected.original; corrected } ->
+                  LocationMap.update
+                    original.extid_loc
+                    (function
+                      | None ->
+                          Some { Corrected.original; corrected }
+                      | Some { Corrected.original; corrected = corrected' } ->
+                          let text =
+                            merge_text
+                              ~loc:original.extid_loc
+                              corrected.text
+                              corrected'.text
+                          in
+                          Some
+                            { Corrected.original
+                            ; corrected =
+                                { original with
+                                  text
+                                }
+                            }
+                    )
+                    acc
+                )
+              ~init:cmap
+              corrected_expectations
+          , merge_text
+              tmap
+              trailing_output
+        )
+      ~init:(LocationMap.empty, Clflag.Set.Map.empty)
+      clist
+    in
+    { corrected_expectations =
+        LocationMap.to_list corrected_expectations
+        |> List.filter_map
+             ~f:(fun (_, { Corrected.original; corrected }) ->
+              if expectation_equal original corrected
+              then None
+              else Some corrected
+            )
+    ; trailing_output
+    }
+
+end
+
 
 let match_expect_extension (ext : Parsetree.extension) =
   match ext with
   | ({Asttypes.txt="expect"|"ocaml.expect"; loc = extid_loc}, payload) ->
-    let invalid_payload () =
-      Location.raise_errorf ~loc:extid_loc "invalid [%%%%expect payload]"
+    let invalid_payload ?(loc = extid_loc) msg =
+      Location.raise_errorf ~loc
+        "invalid [%%%%expect payload] (%s)" msg
     in
     let string_constant (e : Parsetree.expression) =
       match e.pexp_desc with
       | Pexp_constant {pconst_desc = Pconst_string (str, _, Some tag); _} ->
         { str; tag }
-      | _ -> invalid_payload ()
+      | _ -> invalid_payload ~loc:e.pexp_loc "not a string"
     in
     let expectation =
       match payload with
       | PStr [{ pstr_desc = Pstr_eval (e, []) }] ->
-        let normal, principal =
+        let text =
           match e.pexp_desc with
           | Pexp_tuple
-              [ None, a
-              ; None,
-                { pexp_desc = Pexp_construct
-                                ({ txt = Lident "Principal"; _ }, Some b) }
-              ] ->
-            (string_constant a, string_constant b)
-          | _ -> let s = string_constant e in (s, s)
+              ((None, normal)
+               :: rest) ->
+              List.fold_left
+                ~f:(fun acc -> function
+                      None
+                    , { Parsetree.
+                        pexp_desc = Pexp_construct
+                            ({ txt = clflags_s; _}, Some b) }
+                    | None,
+                      { Parsetree.
+                        pexp_desc = Pexp_apply
+                            ({ pexp_desc = Pexp_construct
+                                ({ txt = clflags_s; _}, None) }
+                            , [ Nolabel, b ]) }
+                      ->
+                        Clflag.Set.Map.add
+                          (Clflag.Set.of_longident ~loc:b.pexp_loc clflags_s)
+                          (string_constant b)
+                          acc
+                    | None,
+                      { Parsetree.
+                        pexp_desc = Pexp_apply
+                            ({ pexp_desc = Pexp_tuple clflags_tuple; _ }
+                            , [ Nolabel, b ]) }
+                      ->
+                        let str = string_constant b in
+                        List.fold_left
+                          ~f:(fun acc ->
+                              function
+                              | None,
+                                { Parsetree.
+                                  pexp_desc = Pexp_construct
+                                      ({ txt = cl; _}, None) } ->
+                                  Clflag.Set.Map.add
+                                    (Clflag.Set.of_longident ~loc:b.pexp_loc cl)
+                                    str
+                                    acc
+                              | _ ->
+                                  invalid_payload
+                                    ~loc:b.pexp_loc
+                                    "expected Constructor"
+                            )
+                          ~init:acc clflags_tuple
+                    | _, pe ->
+                        invalid_payload
+                          ~loc:pe.Parsetree.pexp_loc
+                          "expected Constructor{|string|}"
+                  )
+                ~init:(Clflag.Set.Map.singleton
+                         Clflag.Set.empty (string_constant normal))
+                rest
+          | _ ->
+              let s = string_constant e in
+              Clflag.Set.Map.singleton Clflag.Set.empty s
         in
         { extid_loc
         ; payload_loc = e.pexp_loc
-        ; normal
-        ; principal
+        ; text
         }
       | PStr [] ->
         let s = { tag = ""; str = "" } in
         { extid_loc
         ; payload_loc  = { extid_loc with loc_start = extid_loc.loc_end }
-        ; normal    = s
-        ; principal = s
+        ; text = Clflag.Set.Map.singleton Clflag.Set.empty s
         }
-      | _ -> invalid_payload ()
+      | _ -> invalid_payload "not an expectation"
     in
     Some expectation
   | _ ->
@@ -178,21 +395,23 @@ let parse_contents ~fname contents =
 
 let eval_expectation expectation ~output =
   let s =
-    if !Clflags.principal then
-      expectation.principal
-    else
-      expectation.normal
+    try
+      Clflag.Set.Map.find (Clflag.Set.get_current ()) expectation.text
+    with
+    | Not_found ->
+        try
+          Clflag.Set.Map.find Clflag.Set.empty expectation.text
+        with
+        | Not_found -> empty_str
   in
-  if s.str = output then
-    None
-  else
-    let s = { s with str = output } in
-    Some (
-      if !Clflags.principal then
-        { expectation with principal = s }
-      else
-        { expectation with normal = s }
-    )
+  let s = { s with str = output } in
+  { Corrected.original = expectation
+  ; corrected = { expectation with
+                  text =
+                    Clflag.Set.Map.singleton
+                      (Clflag.Set.get_current ()) s
+                }
+  }
 
 let shift_lines delta phrases =
   let position (pos : Lexing.position) =
@@ -284,12 +503,10 @@ let eval_expect_file _fname ~file_contents =
   in
   let corrected_expectations =
     capture_everything buf ppf ~f:(fun () ->
-      List.fold_left chunks ~init:[] ~f:(fun acc chunk ->
-        let output = exec_phrases chunk.phrases in
-        match eval_expectation chunk.expectation ~output with
-        | None -> acc
-        | Some correction -> correction :: acc)
-      |> List.rev)
+        List.fold_left chunks ~init:[] ~f:(fun acc chunk ->
+            let output = exec_phrases chunk.phrases in
+            eval_expectation chunk.expectation ~output :: acc)
+        |> List.rev)
   in
   let trailing_output =
     match trailing_code with
@@ -297,37 +514,109 @@ let eval_expect_file _fname ~file_contents =
     | Some phrases ->
       capture_everything buf ppf ~f:(fun () -> exec_phrases phrases)
   in
-  { corrected_expectations; trailing_output }
+  let trailing_output =
+    Clflag.Set.Map.singleton (Clflag.Set.get_current ())
+      { str = trailing_output; tag = "" }
+  in
+  { Correction.corrected_expectations; trailing_output }
 
 let output_slice oc s a b =
   output_string oc (String.sub s ~pos:a ~len:(b - a))
 
-let output_corrected oc ~file_contents correction =
+module String_map = Map.Make(String)
+
+let output_corrected oc ~file_contents (correction : _ Correction.t) =
   let output_body oc { str; tag } =
     Printf.fprintf oc "{%s|%s|%s}" tag str tag
+  in
+  let output_for_all_clflags ?(output_empty=true) map =
+    let normal =
+      Clflag.Set.Map.find_opt Clflag.Set.empty map
+      |> Option.value ~default:empty_str
+    in
+    let string_to_flags_and_tag =
+      Clflag.Set.Map.fold
+        (fun key body acc ->
+           if body = normal then acc
+           else String_map.add_to_list body.str (key, body.tag) acc
+        )
+        map
+        String_map.empty
+    in
+    let ordered_by_lowest_flag =
+      String_map.fold
+        (fun str (clflagss_and_tag) acc ->
+           let clflagss =
+             List.sort_uniq ~cmp:Clflag.Set.compare
+               (List.map ~f:fst clflagss_and_tag)
+           in
+           let tag = snd (List.hd clflagss_and_tag) in
+           let low_flag = List.hd clflagss in
+           Clflag.Set.Map.add_to_list low_flag (clflagss, { str; tag }) acc
+        )
+        string_to_flags_and_tag
+        Clflag.Set.Map.empty
+    in
+    (* don't output empty trailing output *)
+    if (not output_empty) && Clflag.Set.Map.is_empty ordered_by_lowest_flag
+       && normal.str = empty_str.str
+    then ()
+    else begin
+      output_body oc normal;
+      Clflag.Set.Map.iter
+        (fun _ list ->
+           List.iter ~f:(fun (clflagss, str) ->
+               output_string oc ", ";
+               let paren = List.length clflagss > 1 in
+               if paren then output_string oc "(";
+               List.iteri
+                 ~f:(fun i clflags ->
+                     if i > 0 then output_string oc ", ";
+                     output_string oc (Clflag.Set.to_string clflags))
+                 clflagss;
+               if paren then output_string oc ")";
+               output_body oc str;
+             )
+             list
+        )
+        ordered_by_lowest_flag;
+    end
   in
   let ofs =
     List.fold_left correction.corrected_expectations ~init:0
       ~f:(fun ofs c ->
         output_slice oc file_contents ofs c.payload_loc.loc_start.pos_cnum;
-        output_body oc c.normal;
-        if c.normal.str <> c.principal.str then begin
-          output_string oc ", Principal";
-          output_body oc c.principal
-        end;
+        output_for_all_clflags c.text;
         c.payload_loc.loc_end.pos_cnum)
   in
   output_slice oc file_contents ofs (String.length file_contents);
-  match correction.trailing_output with
-  | "" -> ()
-  | s  -> Printf.fprintf oc "\n[%%%%expect{|%s|}]\n" s
+  output_for_all_clflags correction.trailing_output ~output_empty:false
 
 let write_corrected ~file ~file_contents correction =
   let oc = open_out file in
   output_corrected oc ~file_contents correction;
   close_out oc
 
-let process_expect_file fname =
+
+let with_fresh_compiler_state
+    ~warning_state
+    f
+  =
+  let store = Local_store.fresh () in
+  Typecore.reset_delayed_checks ();
+  Env.reset_required_globals ();
+  Lambda.reset_raise_count ();
+  Out_type.reset ();
+  Out_type.reset_weak_names ();
+  Warnings.with_state warning_state
+    (fun () -> Local_store.with_store store
+        (fun () ->
+           Toploop.initialize_toplevel_env ();
+           f ()
+        )
+    )
+
+let process_expect_file ~startup_clflags fname =
   let corrected_fname = fname ^ ".corrected" in
   let file_contents =
     let ic = open_in_bin fname in
@@ -335,7 +624,26 @@ let process_expect_file fname =
     | s           -> close_in ic; Misc.normalise_eol s
     | exception e -> close_in ic; raise e
   in
-  let correction = eval_expect_file fname ~file_contents in
+  let clflags =
+    List.map ~f:Clflag.Set.of_list
+      [ []; [ Clflag.Rectypes]; [ Clflag.Principal ] ]
+  in
+  let warning_state = Warnings.backup () in
+  let correction =
+    let corrections =
+      List.map clflags ~f:(fun clflags ->
+          let local_clflags = Clflag.Set.union startup_clflags clflags in
+          Clflag.Set.set_current local_clflags;
+          Clflag.Set.original := local_clflags;
+          with_fresh_compiler_state
+            ~warning_state
+            (fun () ->
+               eval_expect_file fname ~file_contents;
+            )
+        )
+    in
+    Correction.merge corrections
+  in
   write_corrected ~file:corrected_fname ~file_contents correction
 
 let repo_root = ref None
@@ -344,6 +652,7 @@ let keep_original_error_size = ref false
 let main fname =
   if not !keep_original_error_size then
     Clflags.error_size := 0;
+  let startup_clflags = Clflag.Set.get_current () in
   Toploop.override_sys_argv
     (Array.sub Sys.argv ~pos:!Arg.current
        ~len:(Array.length Sys.argv - !Arg.current));
@@ -361,10 +670,9 @@ let main fname =
         Compenv.last_include_dirs := [Filename.concat dir "stdlib"]
   end;
   Compmisc.init_path ~auto_include:Load_path.no_auto_include ();
-  Toploop.initialize_toplevel_env ();
   (* We are in interactive mode and should record directive error on stdout *)
   Sys.interactive := true;
-  process_expect_file fname;
+  process_expect_file ~startup_clflags fname;
   exit 0
 
 module Options = Main_args.Make_bytetop_options (struct
