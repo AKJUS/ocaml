@@ -603,7 +603,6 @@ let with_fresh_compiler_state
     f
   =
   let store = Local_store.fresh () in
-  Typecore.reset_delayed_checks ();
   Env.reset_required_globals ();
   Lambda.reset_raise_count ();
   Out_type.reset ();

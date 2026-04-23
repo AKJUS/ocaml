@@ -10709,7 +10709,6 @@ testsuite/tools/environment.cmi : \
     testsuite/tools/harness.cmi
 testsuite/tools/expect.cmo : \
     utils/warnings.cmi \
-    typing/typecore.cmi \
     toplevel/toploop.cmi \
     parsing/printast.cmi \
     parsing/pprintast.cmi \
@@ -10733,7 +10732,6 @@ testsuite/tools/expect.cmo : \
     testsuite/tools/expect.cmi
 testsuite/tools/expect.cmx : \
     utils/warnings.cmx \
-    typing/typecore.cmx \
     toplevel/toploop.cmx \
     parsing/printast.cmx \
     parsing/pprintast.cmx \
