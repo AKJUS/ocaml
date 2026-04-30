@@ -93,7 +93,7 @@ Arguments ending in .cmo are taken to be compiled object bytecode.  These
 files are linked together, along with the object files obtained
 by compiling .ml arguments (if any), and the OCaml standard
 library, to produce a standalone executable program. The order in
-which .cmo and.ml arguments are presented on the command line is
+which .cmo and .ml arguments are presented on the command line is
 relevant: compilation units are initialized in that order at
 run-time, and it is a link-time error to use a component of a unit
 before having initialized it. Hence, a given
@@ -354,7 +354,9 @@ executables produced by
 this would make them vulnerable to attacks.
 .TP
 .BI \-depend " ocamldep-args"
-Compute dependencies, as ocamldep would do.
+Compute dependencies, as
+.BR ocamldep (1)
+would do.
 .TP
 .BI \-dllib\ \-l libname
 Arrange for the C shared library
@@ -373,7 +375,7 @@ at program start-up time. This is used for C stub libraries; see
 for further information.
 .TP
 .BI \-dllpath " dir"
-Adds the directory
+Add the directory
 .I dir
 to the run-time search path for shared
 C libraries.  At link-time, shared libraries are searched in the
@@ -495,6 +497,8 @@ source code.
 .B \-labels
 Labels are not ignored in types, labels may be used in applications,
 and labelled parameters can be given in any order.  This is the default.
+Revert option
+.BR \-nolabels .
 .TP
 .BI \-launch\-method " method"
 Specifies the mechanism used by normal bytecode executables to find the
@@ -541,7 +545,7 @@ bytecode executables produced with the option
 .B ocamlc " \-use\-runtime"
 .IR runtime-name .
 .TP
-.B \-match\-context\-rows
+.BI \-match\-context\-rows " number"
 Set number of rows of context used during pattern matching
 compilation. Lower values cause faster compilation, but
 less optimized code. The default value is 32.
@@ -573,7 +577,8 @@ and pass the correct C libraries and options on the command line.
 .TP
 .B \-nolabels
 Ignore non-optional labels in types. Labels cannot be used in
-applications, and parameter order becomes strict.
+applications, and parameter order becomes strict. See also option
+.BR \-labels .
 .TP
 .B \-nostdlib
 Do not automatically add the standard library directory to the list of
@@ -704,7 +709,7 @@ Do no allow arbitrary recursive types during type-checking.
 This is the default.
 .TP
 .BI \-runtime\-search " method"
-Controls whether the header used by normal bytecode executables is permitted to
+Control whether the header used by normal bytecode executables is permitted to
 search for the interpreter, or requires it to be at a fixed location.
 The following methods are supported:
 .RS
@@ -736,7 +741,7 @@ suffix is supported and gives a debug version of the runtime.
 .TP
 .B \-safe\-string
 Enforce the separation between types
-.BR string " and " bytes " ,"
+.BR string " and " bytes ,
 thereby making strings read-only. This is the default.
 .TP
 .B \-safer\-matching
@@ -796,7 +801,7 @@ accesses an array or string outside of its bounds.
 .TP
 .B \-unsafe\-string
 Identify the types
-.BR string " and " bytes " ,"
+.BR string " and " bytes ,
 thereby making strings writable.
 This is intended for compatibility with old source code and should not
 be used with new software.
@@ -828,7 +833,7 @@ Enable, disable, or mark as fatal the warnings specified by the argument
 .IR warning\-list .
 
 Each warning can be
-.IR enabled " or " disabled " ,"
+.IR enabled " or " disabled ,
 and each warning can be
 .IR fatal " or " non-fatal .
 If a warning is disabled, it isn't displayed and doesn't affect
@@ -841,7 +846,7 @@ The
 .I warning\-list
 argument is either a mnemonic warning specifier or a sequence of single
 character warning specifiers, with no separators between them. A mnemonic
-warning specifier is one of the following
+warning specifier is one of the following:
 .RS
 .TP
 .BI + name
@@ -917,7 +922,7 @@ Disable the set of warnings corresponding to
 .IR lowercase\-letter .
 .RE
 .IP
-The warning numbers and mnemonic names are as follows.
+The warning numbers and mnemonic names are as follows:
 .RS
 .TP
 .B 1 [comment-start]
