@@ -271,6 +271,10 @@ Working version
   counter-example search space.
   (Florian Angeletti, review by Gabriel Scherer)
 
+- #11922, #14789: fix a missing scope escape error message when a pattern alias
+  captured local types from under an or-pattern.
+  (Florian Angeletti, report by Richard Eisenberg, review by Jacques Garrigue)
+
 OCaml 5.5.0
 -----------
 
