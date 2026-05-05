@@ -8,7 +8,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
 
-# Restrict the GITHUB_TOKEN
+# Restrict the CAMLCI_GITHUB_TOKEN
 permissions: {}
 
 concurrency:
