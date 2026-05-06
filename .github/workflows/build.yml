@@ -58,7 +58,8 @@ jobs:
          "$CAMLCI_EVENT_AFTER"
          "$CAMLCI_REPO_FULL_NAME"
         env:
-          # Prefix CAMLCI used here to avoid GITHUB_REF_NAME colliding
+          # Prefix CAMLCI used here to avoid colliding with Github variables,
+          # such as GITHUB_REF_NAME, as they always take precedence
           CAMLCI_GITHUB_REF_NAME: ${{ github.ref }}
           CAMLCI_EVENT_NAME: ${{ github.event_name }}
           CAMLCI_PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
