@@ -247,6 +247,10 @@ Working version
   when mixing self types, local modules and first class modules.
   (Samuel Vivien, review by Florian Angeletti, Jacques Garrigue)
 
+- #14800: localise `nondep_type_rec` memoisation state in a new
+  `Nondep_scope` module (`typing/ctype.ml`).
+  (Matthew Marques, review by Stefan Muenzel)
+
 ### Build system:
 
 - #14676: Security fix: prevent shell injection in Github Actions workflows
