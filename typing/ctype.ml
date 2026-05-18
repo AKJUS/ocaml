@@ -4833,8 +4833,8 @@ and moregen_row type_pairs env row1 row2 =
 
 (* Must empty univar_pairs first *)
 let moregen type_pairs env patt subj =
-  with_univar_pairs [] (fun () ->
-    moregen type_pairs env patt subj)
+  with_univar_pairs [] @@ wrap_trace_gadt_instances env @@ fun () ->
+    moregen type_pairs env patt subj
 
 (*
    Non-generic variable can be instantiated only if [inst_nongen] is
