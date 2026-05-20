@@ -869,7 +869,7 @@ OCAML_ASM_SIZE_TYPE_DIRECTIVES
 OCAML_CC_VENDOR
 
 DEP_CC_PREFIX=''
-AS_CASE([$host],
+AS_CASE([$target],
   [sparc-sun-solaris*],
     [DEP_CC="false"],
   [*-pc-windows],

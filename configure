@@ -15052,7 +15052,7 @@ printf "%s\n" "$ocaml_cc_vendor" >&6; }
 
 
 DEP_CC_PREFIX=''
-case $host in #(
+case $target in #(
   sparc-sun-solaris*) :
     DEP_CC="false" ;; #(
   *-pc-windows) :
