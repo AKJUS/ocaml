@@ -13,6 +13,9 @@ Working version
   of constraints (`with type x =... and type s = ...`).
   (Florian Angeletti, report by Brendan Zabarauskas, review by Gabriel Scherer)
 
+- #14692: Allow unparenthesized application expressions in record update syntax
+  (Stephen Dolan, review by Damien Doligez)
+
 ### Runtime system:
 
 - #14486, #14530: Add FreeBSD frame pointers support for AMD64 and ARM64.
@@ -297,6 +300,32 @@ OCaml 5.5.0
 
 ### Language features:
 
+* #13681, #13682, #13683, #13684, #13275 :
+  Introduce a new type `(module M : S) -> t[M]` that corresponds to
+  module-dependent functions (also called: modular explicits).
+    val mapM: (module M : Monad) (f : 'a -> 'b M.t) : 'a list -> 'b list M.t
+  (Samuel Vivien review by Leo White, Gabriel Scherer, Florian Angeletti,
+    Jacques Garrigue and Stephen Dolan)
+
+- #14040: generalize the constructs `let module`, `let exception` and `let open`
+  to most other structure items, for example:
+    let type t = ... in ...
+    let type Effect.t += Yield in ...
+  (Nicolás Ojeda Bär, review by Valentin Gatien-Baron)
+
+- #13806: Enable the use of function parameters with polymorphic types.
+    let extract (getter : 'a . 'a t -> 'a) = ...
+    let runST (m : 's . ('s, 'a) ST.t) : 'a = ...
+  (Ulysse Gérard, Leo White, review by Florian Angeletti, Samuel Vivien, Gabriel
+  Scherer and Jacques Garrigue)
+
+
+* #13712: Introduce a new kind `Type_external` and syntax
+  `type t = external "name"` to discriminate external types from other types
+  and each other.  This PR turns primitive types into external and removes the
+  past behavior of discriminating abstract types defined in the current module.
+  (Takafumi Saikawa, Jacques Garrigue, review by Richard Eisenberg)
+
 * #14009: infix extension points/attributes appearing in local structure items,
   eg `let module%foo[@bar] ... in ...` are attached to the AST node of the
   corresponding structure item (similar to their global counterparts) and no
@@ -309,24 +338,6 @@ OCaml 5.5.0
 - #14029: Recognize `%identity` as nonexpansive
   (Stephen Dolan and Olivier Nicole, review by Hugo Heuzard, Jacques Garrigue,
   Jeremy Yallop,  and Gabriel Scherer)
-
-* #13712: Introduce a new kind `Type_external` and syntax
-  `type t = external "name"` to discriminate external types from other types
-  and each other.  This PR turns primitive types into external and removes the
-  past behavior of discriminating abstract types defined in the current module.
-  (Takafumi Saikawa, Jacques Garrigue, review by Richard Eisenberg)
-
-- #13806: Enable the use of function parameters with polymorphic types.
-  (Ulysse Gérard, Leo White, review by Florian Angeletti, Samuel Vivien, Gabriel
-  Scherer and Jacques Garrigue)
-
-- #14040: generalize the constructs `let module`, `let exception` and `let open`
-  to most other structure items, eg `let type t = ... in ...`, `let type t +=
-  ... in ...`, etc.
-  (Nicolás Ojeda Bär, review by Valentin Gatien-Baron)
-
-- #14692: Allow unparenthesized application expressions in record update syntax
-  (Stephen Dolan, review by Damien Doligez)
 
 ### Standard library:
 
@@ -591,12 +602,6 @@ OCaml 5.5.0
   (Damien Doligez, review by Stephen Dolan and Nick Barnes)
 
 ### Type system:
-
-* #13681, #13682, #13683, #13684, #13275 :
-  Introduce a new type `(module M : S) -> t[M]` that corresponds to
-  module-dependent functions (aka modular explicits).
-  (Samuel Vivien review by Leo White, Gabriel Scherer, Florian Angeletti,
-    Jacques Garrigue and Stephen Dolan)
 
 - #13781: Set scope of internal type nodes during abbreviation expansion
   rather than recursing during unification.
