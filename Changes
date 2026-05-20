@@ -328,6 +328,156 @@ OCaml 5.5.0
 - #14692: Allow unparenthesized application expressions in record update syntax
   (Stephen Dolan, review by Damien Doligez)
 
+### Standard library:
+
+- #14437: Add String.split_{first,last,all} and String.rsplit_all
+  (Daniel Bünzli, review by Nicolás Ojeda Bär and Florian Angeletti)
+
+- #14436: Add String.replace_{first,last,all}
+  (Daniel Bünzli, review by Nicolás Ojeda Bär, Ali Caglayan and
+   Florian Angeletti)
+
+- #13343: Add Array.stable_sort_sub
+  (François Pottier, review by Gabriel Scherer, Corentin Leruth and Nicolás
+   Ojeda Bär)
+
+- #14439: Add String.includes
+  (Daniel Bünzli, review by Nicolás Ojeda Bär and Olivier Nicole)
+
+- #10177: Seq.(delay : (unit -> 'a t) -> 'a t)
+  (Gabriel Scherer, review by Jeremy Yallop and François Pottier)
+
+- #14381: Add String.find_{first,last}_index, String.find_{first,last},
+  String.[r]find_all.
+  (Daniel Bünzli, review by Nicolás Ojeda Bär, Ali Caglayan and
+   Florian Angeletti)
+
+- #14438: Add String.is_empty
+  (Daniel Bünzli, review by Nicolás Ojeda Bär and Gabriel Scherer)
+
+- #14440: Add String.of_char
+  (Daniel Bünzli, review by Nicolás Ojeda Bär and Gabriel Scherer)
+
+- #14362: Add String.{drop,take,cut}_{first,last}_while
+  (Daniel Bünzli, review by Nicolás Ojeda Bär and David Allsopp)
+
+- #14363: Preserve the backtrace at exceptional domain termination. Domain.join
+  on an exceptionally terminated domain re-raises the exception with the
+  backtrace.
+  (KC Sivaramakrishnan, report by Nathan Taylor, review by Gabriel Scherer,
+  David Allsopp)
+
+- #13372: New Format and Printf printf-like functions that accept a
+   heterogeneous list as arguments.
+  (Leonardo Santos, review by Florian Angeletti and Gabriel Scherer)
+
+- #14352: Add String.{drop,take,cut}_{first,last}.
+  (Daniel Bünzli, review by David Allsopp, Nicolás Ojeda Bär and
+  Vincent Laviron)
+
+- #14185: List.split_map
+  (Jeremy Yallop, review by Daniel Bünzli, Nicolás Ojeda Bär and Damien Doligez)
+
+- #13728: Add Sys.runtime_executable containing the full path (if available) to
+  the currently executing runtime.
+  (David Allsopp, review by Nicolás Ojeda Bär and Daniel Bünzli)
+
+- #13916: Add Option.product and Option.Syntax.
+  (Nicolás Ojeda Bär, review by Daniel Bünzli, Gabriel Scherer and David
+  Allsopp)
+
+- #13995: Add Option.blend.
+  (Kate Deplaix, review by Daniel Bünzli, Gabriel Scherer,
+   Nicolás Ojeda Bär, Florian Angeletti and Josh Berdine)
+
+- #14043, #14393: Lazy.Mutexed: simple mutex-protected lazy thunks,
+  that may block the entire domain/thread on initialization races.
+  (Gabriel Scherer, suggestion by Kate Deplaix and Pierre Chambart,
+  review by KC Sivaramakrishnan, Florian Angeletti, Kate Deplaix
+  and Daniel Bünzli)
+
+- #14086: Add Domain.count.
+  (Nicolás Ojeda Bär, review by David Allsopp, Gabriel Scherer, Daniel Bünzli
+  and KC Sivaramakrishnan)
+
+- #13920: add Option.{for_all, exists}
+  (Gabriel Scherer, review by Kate Deplaix, Nicolás Ojeda Bär, Richard Eisenberg
+  and Jeremy Yallop)
+
+- #12877: Dynarray.rev_iter, Dynarray.rev_iteri
+  (Gabriel Scherer, review by Léo Andrès, Jeremy Yallop and Nicolás Ojeda Bär)
+
+- #14118: Add {Set,Map}.S.is_singleton
+  (Kate Deplaix, review by Daniel Bünzli, Vincent Laviron, Nicolás Ojeda Bär
+   and Stephen Dolan)
+
+- #14060: Add Hashtbl.find_and_replace and Hashtbl.find_and_remove.
+  (Sacha-Élie Ayoun, review by Nicolás Ojeda Bär and Gabriel Scherer)
+
+- #14227: Add List.filter_mapi.
+  (Émile Trotignon, review by Nicolás Ojeda Bär, Jan Midtgaard and
+   Damien Doligez)
+
+- #14084: Future-proof Dynarray implementation against a smarter compiler
+  (Basile Clément, review by Gabriel Scherer)
+
+- #14432: Add floor division, ceil division, Euclidean division and remainder
+  to the Int, Int32, Int64 and Nativeint modules.
+  (Xavier Leroy, review by Ali Caglayan, Nicolás Ojeda Bär, Gabriel Scherer)
+
+- #13101: Add `Fun.todo ()` to signal that a piece of code is not yet
+  implemented.
+  (Pavlo Khrystenko and Olivier Nicole, review by Daniel Bünzli, Yawar Amin,
+   Gabriel Scherer)
+
+- #14433: Add bit-counting functions `leading_zeros`, `leading_sign_bits`,
+  `trailing_zeros`, `bit_count`, `unsigned_bitsize`, `signed_bitsize`
+  to Int, Int32, Int64, and Nativeint
+  (Xavier Leroy, review by Ali Caglayan and David Allsopp)
+
+### Tools:
+
+- #14055: Invert BUILD_PATH_PREFIX_MAP in directories loaded at startup
+  by the debugger.
+  (Pierre Boutillier, review by Gabriel Scherer and Daniel Bünzli)
+
+* #13638: ocamlmklib exits with code 4 if passed an unrecognised option, as it
+  does with an unrecognised file.
+  (David Allsopp, review by Antonin Décimo and Sébastien Hinderer)
+
+- #13941, #13961: Fix `ocamltest` variable handing.
+  (Damien Doligez, report by Olivier Nicole, review by Gabriel Scherer)
+
+- #13962: Little ocamltest refactors. Fix error handling in C code,
+  leaking file descriptors, code style.
+  (Antonin Décimo, review by Gabriel Scherer)
+
+- #14059: Fix flaky TSan tests
+  (Fabrice Buoro and Olivier Nicole, review by Gabriel Scherer)
+
+- #13966, #13969: Enable "generalized polymorphic #install_printer"
+  in the debugger
+  (Pierre Boutillier and Gabriel Scherer, review by Florian Angeletti)
+
+- #14063 : Debugger fallbacks to "looking for 'module_name'.ml in the
+  loadpath" when seeking source files. It improves hit rate for
+  sources of installed packages.
+  (Pierre Boutillier, review by Gabriel Scherer)
+
+- #14032, #14034: Update to and require FlexDLL 0.44.
+  (Jan Midtgaard, Antonin Décimo, review by David Allsopp)
+
+- #14239: Fix `#show_constructor` when printing non-GADT type parameters
+  (Takafumi Saikawa, Jacques Garrigue, review by Gabriel Scherer)
+
+- #14245: ocamlobjinfo now displays the runtime invoked by a bytecode
+  executable (either from the RNTM section or by analysing the shebang lines)
+  (David Allsopp, review by Damien Doligez and Samuel Hym)
+
+- #14448: ocamllex now prints a `missing-case` warning and shows an example
+  of nonmatching input if a rule is not exhaustive (Martin Jambon,
+  review by David Allsopp and Gabriel Scherer)
+
 ### Runtime system:
 
 - #14469: Make continuation objects have one field instead of two.
@@ -440,119 +590,6 @@ OCaml 5.5.0
   heaps and for a smooth start at program launch and after a forced major GC.
   (Damien Doligez, review by Stephen Dolan and Nick Barnes)
 
-### Code generation and optimizations:
-
-- #14583: fix bug in linear scan spilling heuristic that in certain situations
-  could lead to miscompilations.
-  (Nicolás Ojeda Bär, review by Vincent Laviron)
-
-### Standard library:
-
-- #14437: Add String.split_{first,last,all} and String.rsplit_all
-  (Daniel Bünzli, review by Nicolás Ojeda Bär and Florian Angeletti)
-
-- #14436: Add String.replace_{first,last,all}
-  (Daniel Bünzli, review by Nicolás Ojeda Bär, Ali Caglayan and
-   Florian Angeletti)
-
-- #13343: Add Array.stable_sort_sub
-  (François Pottier, review by Gabriel Scherer, Corentin Leruth and Nicolás
-   Ojeda Bär)
-
-- #14439: Add String.includes
-  (Daniel Bünzli, review by Nicolás Ojeda Bär and Olivier Nicole)
-
-- #10177: Seq.(delay : (unit -> 'a t) -> 'a t)
-  (Gabriel Scherer, review by Jeremy Yallop and François Pottier)
-
-- #14381: Add String.find_{first,last}_index, String.find_{first,last},
-  String.[r]find_all.
-  (Daniel Bünzli, review by Nicolás Ojeda Bär, Ali Caglayan and
-   Florian Angeletti)
-
-- #14438: Add String.is_empty
-  (Daniel Bünzli, review by Nicolás Ojeda Bär and Gabriel Scherer)
-
-- #14440: Add String.of_char
-  (Daniel Bünzli, review by Nicolás Ojeda Bär and Gabriel Scherer)
-
-- #14362: Add String.{drop,take,cut}_{first,last}_while
-  (Daniel Bünzli, review by Nicolás Ojeda Bär and David Allsopp)
-
-- #14363: Preserve the backtrace at exceptional domain termination. Domain.join
-  on an exceptionally terminated domain re-raises the exception with the
-  backtrace.
-  (KC Sivaramakrishnan, report by Nathan Taylor, review by Gabriel Scherer,
-  David Allsopp)
-
-- #13372: New Format and Printf printf-like functions that accept a
-   heterogeneous list as arguments.
-  (Leonardo Santos, review by Florian Angeletti and Gabriel Scherer)
-
-- #14352: Add String.{drop,take,cut}_{first,last}.
-  (Daniel Bünzli, review by David Allsopp, Nicolás Ojeda Bär and
-  Vincent Laviron)
-
-- #14185: List.split_map
-  (Jeremy Yallop, review by Daniel Bünzli, Nicolás Ojeda Bär and Damien Doligez)
-
-- #13728: Add Sys.runtime_executable containing the full path (if available) to
-  the currently executing runtime.
-  (David Allsopp, review by Nicolás Ojeda Bär and Daniel Bünzli)
-
-- #13916: Add Option.product and Option.Syntax.
-  (Nicolás Ojeda Bär, review by Daniel Bünzli, Gabriel Scherer and David
-  Allsopp)
-
-- #13995: Add Option.blend.
-  (Kate Deplaix, review by Daniel Bünzli, Gabriel Scherer,
-   Nicolás Ojeda Bär, Florian Angeletti and Josh Berdine)
-
-- #14043, #14393: Lazy.Mutexed: simple mutex-protected lazy thunks,
-  that may block the entire domain/thread on initialization races.
-  (Gabriel Scherer, suggestion by Kate Deplaix and Pierre Chambart,
-  review by KC Sivaramakrishnan, Florian Angeletti, Kate Deplaix
-  and Daniel Bünzli)
-
-- #14086: Add Domain.count.
-  (Nicolás Ojeda Bär, review by David Allsopp, Gabriel Scherer, Daniel Bünzli
-  and KC Sivaramakrishnan)
-
-- #13920: add Option.{for_all, exists}
-  (Gabriel Scherer, review by Kate Deplaix, Nicolás Ojeda Bär, Richard Eisenberg
-  and Jeremy Yallop)
-
-- #12877: Dynarray.rev_iter, Dynarray.rev_iteri
-  (Gabriel Scherer, review by Léo Andrès, Jeremy Yallop and Nicolás Ojeda Bär)
-
-- #14118: Add {Set,Map}.S.is_singleton
-  (Kate Deplaix, review by Daniel Bünzli, Vincent Laviron, Nicolás Ojeda Bär
-   and Stephen Dolan)
-
-- #14060: Add Hashtbl.find_and_replace and Hashtbl.find_and_remove.
-  (Sacha-Élie Ayoun, review by Nicolás Ojeda Bär and Gabriel Scherer)
-
-- #14227: Add List.filter_mapi.
-  (Émile Trotignon, review by Nicolás Ojeda Bär, Jan Midtgaard and
-   Damien Doligez)
-
-- #14084: Future-proof Dynarray implementation against a smarter compiler
-  (Basile Clément, review by Gabriel Scherer)
-
-- #14432: Add floor division, ceil division, Euclidean division and remainder
-  to the Int, Int32, Int64 and Nativeint modules.
-  (Xavier Leroy, review by Ali Caglayan, Nicolás Ojeda Bär, Gabriel Scherer)
-
-- #13101: Add `Fun.todo ()` to signal that a piece of code is not yet
-  implemented.
-  (Pavlo Khrystenko and Olivier Nicole, review by Daniel Bünzli, Yawar Amin,
-   Gabriel Scherer)
-
-- #14433: Add bit-counting functions `leading_zeros`, `leading_sign_bits`,
-  `trailing_zeros`, `bit_count`, `unsigned_bitsize`, `signed_bitsize`
-  to Int, Int32, Int64, and Nativeint
-  (Xavier Leroy, review by Ali Caglayan and David Allsopp)
-
 ### Type system:
 
 * #13681, #13682, #13683, #13684, #13275 :
@@ -606,139 +643,6 @@ OCaml 5.5.0
 - #14434, #14652: Protect check_counter_example_pat against polymorphic types,
   restoring type soundness.
   (Stephen Dolan and Jacques Garrigue, report and review by Alistair O'Brien)
-
-### Other libraries:
-
-- #13700, #14454, #14715: Use POSIX thread-safe getgrnam_r, getgrgid_r,
-  getpwnam_r, getpwuid_r, gmtime_r, localtime_r, getlogin_r, and fix mktime
-  error checking.
-  (Antonin Décimo, review by Florian Angeletti, David Allsopp, Stefan Muenzel,
-   Gabriel Scherer, and Miod Vallat)
-
-- #14406: Better handling of address length for unix sockets, improving Haiku
-  compatibility.
-  (Sylvain Kerjean, review by Antonin Décimo and Nicolás Ojeda Bär)
-
-* #14046: On Windows, `Unix.kill pid Sys.sigkill` causes the receiving process
-  to exit with code ERROR_PROCESS_ABORTED (1067) instead of 0.
-  (Nicolás Ojeda Bär, review by Miod Vallat, Antonin Décimo and David Allsopp)
-
-- #14020: Add Unix.unsetenv.
-  (Nicolás Ojeda Bär, review by Antonin Décimo and David Allsopp)
-
-- #13447: Symmetrize shared `Sys` and `Unix` functions. Apply fixes
-  of #12072, #12184, #12320, and #13166, from `Sys.rename` to
-  `Unix.rename`.  Make `caml_sys_close` raise on error, allowing
-  `Filename.temp_file` retries if close fails. Flush buffers when
-  calling `caml_sys_system_command` on Windows. Error with EINVAL
-  instead of ENOENT if the command string is not a valid C string.
-  (Antonin Décimo, review by Gabriel Scherer and Nicolás Ojeda Bär)
-
-- #14310: Deprecate union sock_addr_union for struct sockaddr_storage
-  and socklen_param_type for socklen_t.
-  (Antonin Décimo, review by Nicolás Ojeda Bär, David Allsopp and Samuel Hym)
-
-- #14391: unload native dynlinked objects when an error occurs and it is safe to
-  do so. (Fixes #14323)
-  (Nicolás Ojeda Bär, review by Vincent Laviron)
-
-### Tools:
-
-- #14055: Invert BUILD_PATH_PREFIX_MAP in directories loaded at startup
-  by the debugger.
-  (Pierre Boutillier, review by Gabriel Scherer and Daniel Bünzli)
-
-* #13638: ocamlmklib exits with code 4 if passed an unrecognised option, as it
-  does with an unrecognised file.
-  (David Allsopp, review by Antonin Décimo and Sébastien Hinderer)
-
-- #13941, #13961: Fix `ocamltest` variable handing.
-  (Damien Doligez, report by Olivier Nicole, review by Gabriel Scherer)
-
-- #13962: Little ocamltest refactors. Fix error handling in C code,
-  leaking file descriptors, code style.
-  (Antonin Décimo, review by Gabriel Scherer)
-
-- #14059: Fix flaky TSan tests
-  (Fabrice Buoro and Olivier Nicole, review by Gabriel Scherer)
-
-- #13966, #13969: Enable "generalized polymorphic #install_printer"
-  in the debugger
-  (Pierre Boutillier and Gabriel Scherer, review by Florian Angeletti)
-
-- #14063 : Debugger fallbacks to "looking for 'module_name'.ml in the
-  loadpath" when seeking source files. It improves hit rate for
-  sources of installed packages.
-  (Pierre Boutillier, review by Gabriel Scherer)
-
-- #14032, #14034: Update to and require FlexDLL 0.44.
-  (Jan Midtgaard, Antonin Décimo, review by David Allsopp)
-
-- #14239: Fix `#show_constructor` when printing non-GADT type parameters
-  (Takafumi Saikawa, Jacques Garrigue, review by Gabriel Scherer)
-
-- #14245: ocamlobjinfo now displays the runtime invoked by a bytecode
-  executable (either from the RNTM section or by analysing the shebang lines)
-  (David Allsopp, review by Damien Doligez and Samuel Hym)
-
-- #14448: ocamllex now prints a `missing-case` warning and shows an example
-  of nonmatching input if a rule is not exhaustive (Martin Jambon,
-  review by David Allsopp and Gabriel Scherer)
-
-### Manual and documentation:
-
-- #14684, #14782: Improve ocamlc's and ocamlopt's manual pages
-  (Samuel Hym, review by Florian Angeletti, Antonin Décimo and Gabriel Scherer)
-
-- #14397: Improve documentation of type-directed disambiguation of array
-  literals (Alicia Michael, review by Olivier Nicole and Florian Angeletti)
-
-- #14293: Improve documentation of Runtime_events.Timestamp (Raphaël Proust,
-  review by Gabriel Scherer)
-
-- #13747: Document support for native debugging with GDB and LLDB.
-   (Tim McGilchrist, review by Daniel Bünzli, Samuel Hym, Olivier Nicole
-   and Antonin Décimo)
-
-* #13975: documented the `[@remove_aliases]` built-in attribute for signatures
-  (introduced by #1652 in 2018). Small refactor of the code that fetches the
-  attribute.
-  (Clement Blaudeau, review by Gabriel Scherer)
-
-- #14002: Add anchors to items and headings of the web version of the API
-  documentation for easier linking.
-  (Nicolás Ojeda Bär, report by Louis Roché, review by Gabriel Scherer and
-  Florian Angeletti)
-
-- #14023: Add documentation for the [row_more] function.
-  (Richard Eisenberg, review by Jacques Garrigue)
-
-- #14038: Fall back immediately to user-agent-defined fonts when web fonts
-  fail to load.
-  (toastal)
-
-- #14048: document modular explicits
-  (Gabriel Scherer, review by Samuel Vivien, Ali Caglayan,
-   Didier Remy and François Pottier)
-
-- #14077: Add missing `item-attribute` rule for `let-binding`s in documentation
-  for attributes.
-  (Shon Feder)
-
-- #14228: Trim leading spaces from first lines of LaTeX `ocamldoccode`
-  environments.
-  (Yukai Chou, review by Nicolás Ojeda Bär)
-
-- #14248: Added documentation about the way `Domain.join` triggers a
-  `Thread.join` on the domain's systhreads.
-  (Raphaël Proust, review by Gabriel Scherer)
-
-- #14392: Fix AsciiDoc files, add more markup, xrefs, documentation.
-  (Antonin Décimo, review by Gabriel Scherer and David Allsopp)
-
-- #13590: Document automatic command-line expansion of `*` and `?` wildcards by
-  the runtime under Windows.
-  (Benjamin Sigonneau, review by Nicolás Ojeda Bär)
 
 ### Compiler user-interface and warnings:
 
@@ -816,6 +720,102 @@ OCaml 5.5.0
   need to report more than one error.
   (Xavier Van de Woestyne, Ulysse Gerard, Thomas Refis and Frédéric
   Bour, review by Florian Angeletti and Thomas Refis)
+
+### Other libraries:
+
+- #13700, #14454, #14715: Use POSIX thread-safe getgrnam_r, getgrgid_r,
+  getpwnam_r, getpwuid_r, gmtime_r, localtime_r, getlogin_r, and fix mktime
+  error checking.
+  (Antonin Décimo, review by Florian Angeletti, David Allsopp, Stefan Muenzel,
+   Gabriel Scherer, and Miod Vallat)
+
+- #14406: Better handling of address length for unix sockets, improving Haiku
+  compatibility.
+  (Sylvain Kerjean, review by Antonin Décimo and Nicolás Ojeda Bär)
+
+* #14046: On Windows, `Unix.kill pid Sys.sigkill` causes the receiving process
+  to exit with code ERROR_PROCESS_ABORTED (1067) instead of 0.
+  (Nicolás Ojeda Bär, review by Miod Vallat, Antonin Décimo and David Allsopp)
+
+- #14020: Add Unix.unsetenv.
+  (Nicolás Ojeda Bär, review by Antonin Décimo and David Allsopp)
+
+- #13447: Symmetrize shared `Sys` and `Unix` functions. Apply fixes
+  of #12072, #12184, #12320, and #13166, from `Sys.rename` to
+  `Unix.rename`.  Make `caml_sys_close` raise on error, allowing
+  `Filename.temp_file` retries if close fails. Flush buffers when
+  calling `caml_sys_system_command` on Windows. Error with EINVAL
+  instead of ENOENT if the command string is not a valid C string.
+  (Antonin Décimo, review by Gabriel Scherer and Nicolás Ojeda Bär)
+
+- #14310: Deprecate union sock_addr_union for struct sockaddr_storage
+  and socklen_param_type for socklen_t.
+  (Antonin Décimo, review by Nicolás Ojeda Bär, David Allsopp and Samuel Hym)
+
+- #14391: unload native dynlinked objects when an error occurs and it is safe to
+  do so. (Fixes #14323)
+  (Nicolás Ojeda Bär, review by Vincent Laviron)
+
+### Code generation and optimizations:
+
+- #14583: fix bug in linear scan spilling heuristic that in certain situations
+  could lead to miscompilations.
+  (Nicolás Ojeda Bär, review by Vincent Laviron)
+
+### Manual and documentation:
+
+- #14684, #14782: Improve ocamlc's and ocamlopt's manual pages
+  (Samuel Hym, review by Florian Angeletti, Antonin Décimo and Gabriel Scherer)
+
+- #14397: Improve documentation of type-directed disambiguation of array
+  literals (Alicia Michael, review by Olivier Nicole and Florian Angeletti)
+
+- #14293: Improve documentation of Runtime_events.Timestamp (Raphaël Proust,
+  review by Gabriel Scherer)
+
+- #13747: Document support for native debugging with GDB and LLDB.
+   (Tim McGilchrist, review by Daniel Bünzli, Samuel Hym, Olivier Nicole
+   and Antonin Décimo)
+
+* #13975: documented the `[@remove_aliases]` built-in attribute for signatures
+  (introduced by #1652 in 2018). Small refactor of the code that fetches the
+  attribute.
+  (Clement Blaudeau, review by Gabriel Scherer)
+
+- #14002: Add anchors to items and headings of the web version of the API
+  documentation for easier linking.
+  (Nicolás Ojeda Bär, report by Louis Roché, review by Gabriel Scherer and
+  Florian Angeletti)
+
+- #14023: Add documentation for the [row_more] function.
+  (Richard Eisenberg, review by Jacques Garrigue)
+
+- #14038: Fall back immediately to user-agent-defined fonts when web fonts
+  fail to load.
+  (toastal)
+
+- #14048: document modular explicits
+  (Gabriel Scherer, review by Samuel Vivien, Ali Caglayan,
+   Didier Remy and François Pottier)
+
+- #14077: Add missing `item-attribute` rule for `let-binding`s in documentation
+  for attributes.
+  (Shon Feder)
+
+- #14228: Trim leading spaces from first lines of LaTeX `ocamldoccode`
+  environments.
+  (Yukai Chou, review by Nicolás Ojeda Bär)
+
+- #14248: Added documentation about the way `Domain.join` triggers a
+  `Thread.join` on the domain's systhreads.
+  (Raphaël Proust, review by Gabriel Scherer)
+
+- #14392: Fix AsciiDoc files, add more markup, xrefs, documentation.
+  (Antonin Décimo, review by Gabriel Scherer and David Allsopp)
+
+- #13590: Document automatic command-line expansion of `*` and `?` wildcards by
+  the runtime under Windows.
+  (Benjamin Sigonneau, review by Nicolás Ojeda Bär)
 
 ### Internal/compiler-libs changes:
 
