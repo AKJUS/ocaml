@@ -122,6 +122,11 @@ Working version
    Xavier Leroy, Guillaume Munch-Maccagnoni, Vesa Karvonen,
    Noah Bogart, Léo Andrès and Olivier Nicole)
 
+- #13101: Add `Fun.todo ()` to signal that a piece of code is not yet
+  implemented.
+  (Pavlo Khrystenko and Olivier Nicole, review by Daniel Bünzli, Yawar Amin,
+   Gabriel Scherer)
+
 - #13554: Add `List.append_map` and `List.rev_append_map`.
   (Sylvain Boilard and Hugo Heuzard, review by Nicolás Ojeda Bär, Daniel Bünzli,
    Damien Doligez and Jeremy Yallop)
@@ -341,25 +346,30 @@ OCaml 5.5.0
 
 ### Standard library:
 
+- #13372: New Format and Printf printf-like functions that accept a
+   heterogeneous list as arguments.
+    Format.lprintf "@[%s@ %d@]@." [ "x ="; 1 ]
+  (Leonardo Santos, review by Florian Angeletti and Gabriel Scherer)
+
 - #14437: Add String.split_{first,last,all} and String.rsplit_all
+    split_first: sep:string -> string -> (string * string) option
+    split_all: sep:string -> drop:(string -> bool) -> string -> string list
   (Daniel Bünzli, review by Nicolás Ojeda Bär and Florian Angeletti)
 
 - #14436: Add String.replace_{first,last,all}
+    replace_first: sub:string -> by:string -> ?start:int -> string -> string
   (Daniel Bünzli, review by Nicolás Ojeda Bär, Ali Caglayan and
    Florian Angeletti)
 
-- #13343: Add Array.stable_sort_sub
-  (François Pottier, review by Gabriel Scherer, Corentin Leruth and Nicolás
-   Ojeda Bär)
-
-- #14439: Add String.includes
+- #14439: Add String.includes, to complete the trio:
+    starts_with: prefix:string -> string -> bool
+    ends_with: suffix:string -> string -> bool
+    includes: affix:string -> string -> bool
   (Daniel Bünzli, review by Nicolás Ojeda Bär and Olivier Nicole)
-
-- #10177: Seq.(delay : (unit -> 'a t) -> 'a t)
-  (Gabriel Scherer, review by Jeremy Yallop and François Pottier)
 
 - #14381: Add String.find_{first,last}_index, String.find_{first,last},
   String.[r]find_all.
+    find_first_index: (char -> bool) -> ?start:int -> string -> int option
   (Daniel Bünzli, review by Nicolás Ojeda Bär, Ali Caglayan and
    Florian Angeletti)
 
@@ -369,37 +379,30 @@ OCaml 5.5.0
 - #14440: Add String.of_char
   (Daniel Bünzli, review by Nicolás Ojeda Bär and Gabriel Scherer)
 
-- #14362: Add String.{drop,take,cut}_{first,last}_while
-  (Daniel Bünzli, review by Nicolás Ojeda Bär and David Allsopp)
-
-- #14363: Preserve the backtrace at exceptional domain termination. Domain.join
-  on an exceptionally terminated domain re-raises the exception with the
-  backtrace.
-  (KC Sivaramakrishnan, report by Nathan Taylor, review by Gabriel Scherer,
-  David Allsopp)
-
-- #13372: New Format and Printf printf-like functions that accept a
-   heterogeneous list as arguments.
-  (Leonardo Santos, review by Florian Angeletti and Gabriel Scherer)
-
 - #14352: Add String.{drop,take,cut}_{first,last}.
+    take_first: int -> string -> string
+    cut_first: int -> string -> string * string
   (Daniel Bünzli, review by David Allsopp, Nicolás Ojeda Bär and
   Vincent Laviron)
 
-- #14185: List.split_map
-  (Jeremy Yallop, review by Daniel Bünzli, Nicolás Ojeda Bär and Damien Doligez)
-
-- #13728: Add Sys.runtime_executable containing the full path (if available) to
-  the currently executing runtime.
-  (David Allsopp, review by Nicolás Ojeda Bär and Daniel Bünzli)
+- #14362: Add String.{drop,take,cut}_{first,last}_while
+    drop_first_while: (char -> bool) -> string -> string
+  (Daniel Bünzli, review by Nicolás Ojeda Bär and David Allsopp)
 
 - #13916: Add Option.product and Option.Syntax.
   (Nicolás Ojeda Bär, review by Daniel Bünzli, Gabriel Scherer and David
   Allsopp)
 
-- #13995: Add Option.blend.
+- #13995: Option.blend: ('a -> 'a -> 'a) -> 'a option -> 'a option -> 'a option
   (Kate Deplaix, review by Daniel Bünzli, Gabriel Scherer,
    Nicolás Ojeda Bär, Florian Angeletti and Josh Berdine)
+
+- #13920: add Option.{for_all, exists}
+  (Gabriel Scherer, review by Kate Deplaix, Nicolás Ojeda Bär, Richard Eisenberg
+  and Jeremy Yallop)
+
+- #14185: List.split_map: ('a -> 'b * 'c) -> 'a list -> 'b list * 'c list
+  (Jeremy Yallop, review by Daniel Bünzli, Nicolás Ojeda Bär and Damien Doligez)
 
 - #14043, #14393: Lazy.Mutexed: simple mutex-protected lazy thunks,
   that may block the entire domain/thread on initialization races.
@@ -407,44 +410,55 @@ OCaml 5.5.0
   review by KC Sivaramakrishnan, Florian Angeletti, Kate Deplaix
   and Daniel Bünzli)
 
-- #14086: Add Domain.count.
-  (Nicolás Ojeda Bär, review by David Allsopp, Gabriel Scherer, Daniel Bünzli
-  and KC Sivaramakrishnan)
-
-- #13920: add Option.{for_all, exists}
-  (Gabriel Scherer, review by Kate Deplaix, Nicolás Ojeda Bär, Richard Eisenberg
-  and Jeremy Yallop)
-
-- #12877: Dynarray.rev_iter, Dynarray.rev_iteri
-  (Gabriel Scherer, review by Léo Andrès, Jeremy Yallop and Nicolás Ojeda Bär)
-
 - #14118: Add {Set,Map}.S.is_singleton
   (Kate Deplaix, review by Daniel Bünzli, Vincent Laviron, Nicolás Ojeda Bär
    and Stephen Dolan)
 
 - #14060: Add Hashtbl.find_and_replace and Hashtbl.find_and_remove.
+    find_and_replace: ('k, 'a) Hashtbl.t -> 'k -> 'a -> 'a option
+    find_and_remove: ('k, 'a) Hashtbl.t -> 'k -> 'a option
   (Sacha-Élie Ayoun, review by Nicolás Ojeda Bär and Gabriel Scherer)
 
 - #14227: Add List.filter_mapi.
   (Émile Trotignon, review by Nicolás Ojeda Bär, Jan Midtgaard and
    Damien Doligez)
 
-- #14084: Future-proof Dynarray implementation against a smarter compiler
-  (Basile Clément, review by Gabriel Scherer)
-
 - #14432: Add floor division, ceil division, Euclidean division and remainder
-  to the Int, Int32, Int64 and Nativeint modules.
+  to the Int, Int32, Int64 and Nativeint modules: `fdiv`, `cdiv`, `ediv`.
   (Xavier Leroy, review by Ali Caglayan, Nicolás Ojeda Bär, Gabriel Scherer)
-
-- #13101: Add `Fun.todo ()` to signal that a piece of code is not yet
-  implemented.
-  (Pavlo Khrystenko and Olivier Nicole, review by Daniel Bünzli, Yawar Amin,
-   Gabriel Scherer)
 
 - #14433: Add bit-counting functions `leading_zeros`, `leading_sign_bits`,
   `trailing_zeros`, `bit_count`, `unsigned_bitsize`, `signed_bitsize`
   to Int, Int32, Int64, and Nativeint
   (Xavier Leroy, review by Ali Caglayan and David Allsopp)
+
+
+- #10177: Seq.(delay : (unit -> 'a t) -> 'a t)
+  (Gabriel Scherer, review by Jeremy Yallop and François Pottier)
+
+- #13343: Add Array.stable_sort_sub
+  (François Pottier, review by Gabriel Scherer, Corentin Leruth and Nicolás
+   Ojeda Bär)
+
+- #14363: Preserve the backtrace at exceptional domain termination. Domain.join
+  on an exceptionally terminated domain re-raises the exception with the
+  backtrace.
+  (KC Sivaramakrishnan, report by Nathan Taylor, review by Gabriel Scherer,
+  David Allsopp)
+
+- #13728: Add Sys.runtime_executable containing the full path (if available) to
+  the currently executing runtime.
+  (David Allsopp, review by Nicolás Ojeda Bär and Daniel Bünzli)
+
+- #14086: Add Domain.count.
+  (Nicolás Ojeda Bär, review by David Allsopp, Gabriel Scherer, Daniel Bünzli
+  and KC Sivaramakrishnan)
+
+- #12877: Dynarray.rev_iter, Dynarray.rev_iteri
+  (Gabriel Scherer, review by Léo Andrès, Jeremy Yallop and Nicolás Ojeda Bär)
+
+- #14084: Future-proof Dynarray implementation against a smarter compiler
+  (Basile Clément, review by Gabriel Scherer)
 
 ### Tools:
 
