@@ -197,8 +197,6 @@ case "$1" in
       sed -i '/native_/s/true/false/' \
              "$FULL_BUILD_PREFIX-$PORT/ocamltest/ocamltest_config.ml"
       $MAKE -C "$FULL_BUILD_PREFIX-$PORT" -j ocamltest ocamltest.opt
-      # Disable cold tests
-      export OCAMLTEST_COLD_TESTS=0
       # And run the entire testsuite, skipping all the native-code tests
       run "test $PORT" \
           make -C "$FULL_BUILD_PREFIX-$PORT/testsuite" SHOW_TIMINGS=1 all
