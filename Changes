@@ -78,6 +78,11 @@ Working version
 - #14717: assign 'unique_id' early during domain creation to help debugging
   (Gabriel Scherer, review by Olivier Nicole)
 
+- grouped fixes in the ephemeron runtime
+  + #14734: fix ephemeron orphaning (a counterpart of #14722)
+  + #14733: clarify the implementation of per-domain ephemeron work counters
+  (Gabriel Scherer, review by Damien Doligez)
+
 ### Type system:
 
 * #11648, #14766, #14768, #14776: Keep expansion and new well-foundedness check
