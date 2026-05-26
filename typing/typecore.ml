@@ -241,18 +241,12 @@ end = struct
     | Path.Papply (f,x) -> Path.Papply (copy_path id_map f, copy_path id_map x)
     | Path.Pextra_ty (p,e) -> Path.Pextra_ty(copy_path id_map p, e)
     | Path.Pident id as p ->
-      match Ident.find_unscoped id with
-      | None -> p
-      | Some us ->
-          let us' =
-            begin match copy_unscoped us !id_map with
-            | None -> let us' = Ident.Unscoped.refresh us in
-                id_map := (us,us')::!id_map;
-                us'
-            | Some us' -> us'
-            end
-          in
-          Path.Pident (Ident.of_unscoped us')
+        match Ident.find_unscoped id with
+        | None -> p
+        | Some us ->
+            match copy_unscoped us id_map with
+            | None -> p
+            | Some us' -> Path.Pident (Ident.of_unscoped us')
 
   let copy_path id_map p =
     if Path.contains_unscoped_ident p then copy_path id_map p else p
@@ -260,7 +254,7 @@ end = struct
   let deep_copy_package id_map copy {pack_path; pack_constraints} =
     {pack_path = copy_path id_map pack_path;
      pack_constraints =
-       List.map (fun (l, tl) -> l, copy tl) pack_constraints}
+       List.map (fun (l, tl) -> l, copy id_map tl) pack_constraints}
 
   (* The goal of [deep_copy_desc/deep_copy] is to obtain a fully
      independent copy of a type, including all nested structure,
@@ -277,7 +271,9 @@ end = struct
      One could consider adapting [Btype.copy_type_desc] to avoid
      duplication. *)
 
-  let deep_copy_desc id_map copy = function
+  let deep_copy_desc id_map copy_with_map =
+    let copy x = copy_with_map id_map x in
+    function
     | Tvar _ | Tnil | Tunivar _ as desc -> desc
     | Tvariant _ as desc ->
         (* The row_desc does contain some type exprs, but:
@@ -301,12 +297,12 @@ end = struct
     | Tfield (s,fk,t1,t2) -> Tfield (s, fk, copy t1, copy t2)
     | Tpoly (t,tl) -> Tpoly (copy t, List.map copy tl)
     | Tpackage package ->
-        Tpackage (deep_copy_package id_map copy package)
+        Tpackage (deep_copy_package id_map copy_with_map package)
     | Tfunctor (l, id, package, type_expr) ->
         let new_id = Ident.Unscoped.refresh id in
-        id_map := (id,new_id) :: !id_map;
-        let package = deep_copy_package id_map copy package in
-        Tfunctor (l, new_id, package, copy type_expr)
+        let id_map = (id, new_id) :: id_map in
+        let package = deep_copy_package id_map copy_with_map package in
+        Tfunctor (l, new_id, package, copy_with_map id_map type_expr)
     | Texpand (t, p, tl) ->
         Texpand (copy t, copy_path id_map p, List.map copy tl)
     | Tlink _ | Tsubst _ -> assert false
@@ -316,8 +312,7 @@ end = struct
      backtracking *)
   let deep_copy () =
     let table = TypeHash.create 7 in
-    let id_map = ref [] in
-    let rec copy ty : type_expr =
+    let rec copy id_map ty : type_expr =
       try TypeHash.find table ty with
       | Not_found ->
           let ty' =
@@ -332,7 +327,7 @@ end = struct
           Transient_expr.(set_desc (repr ty') desc);
           ty'
     in
-    copy
+    copy []
 
   let trace_copy_raw ?(copy=deep_copy ())
         (trace : Errortrace.unification Errortrace.error) =
