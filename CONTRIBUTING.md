@@ -76,6 +76,7 @@ The current list of maintainers is as follows:
 - @lpw25 Leo White
 - @lthls Vincent Laviron
 - @maranget Luc Maranget
+- @MisterDA Antonin Décimo
 - @mshinwell Mark Shinwell
 - @NickBarnes Nick Barnes
 - @nojb Nicolás Ojeda Bär
