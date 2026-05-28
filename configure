@@ -1818,17 +1818,17 @@ Optional Packages:
   --with-odoc
 
 Some influential environment variables:
-  AR          Archive-maintaining program
-  ARFLAGS     Flags to give the archive-maintaining program
-  AS          which assembler to use
-  ASPP        which assembler (with preprocessor) to use
+  AR          archive-maintaining program
+  ARFLAGS     flags to give the archive-maintaining program
+  AS          program for compiling assembly files
+  ASPP        program for preprocessing and compiling assembly files
   PARTIALLD   how to build partial (relocatable) object files
-  RC          which resource compiler to use
+  RC          program for compiling Windows Resource files
   MANIFEST_TOOL
-              which manifest generator to use
-  STRIP       Program used to perform stripping
+              program used to generate manifests (Windows)
+  STRIP       program used to perform stripping
   FLEXLINKFLAGS
-              Supplementary flags passed to flexlink (Windows targets)
+              extra flags to give to flexlink (Windows targets)
   COMPILER_BYTECODE_CFLAGS
               CFLAGS for compiling C files to be linked with bytecode
   COMPILER_BYTECODE_CPPFLAGS
@@ -1852,7 +1852,7 @@ Some influential environment variables:
   WINDOWS_UNICODE_MODE
               how to handle Unicode under Windows: ansi, compatible
   DEFAULT_STRING
-
+              obsolete
   CC          C compiler command
   CFLAGS      C compiler flags
   LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a

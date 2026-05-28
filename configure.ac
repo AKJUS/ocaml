@@ -484,16 +484,15 @@ AS_CASE([$target],
 
 # Environment variables that are taken into account
 
-AC_ARG_VAR([AR], [Archive-maintaining program])
-AC_ARG_VAR([ARFLAGS], [Flags to give the archive-maintaining program])
-AC_ARG_VAR([AS], [which assembler to use])
-AC_ARG_VAR([ASPP], [which assembler (with preprocessor) to use])
+AC_ARG_VAR([AR], [archive-maintaining program])
+AC_ARG_VAR([ARFLAGS], [flags to give the archive-maintaining program])
+AC_ARG_VAR([AS], [program for compiling assembly files])
+AC_ARG_VAR([ASPP], [program for preprocessing and compiling assembly files])
 AC_ARG_VAR([PARTIALLD], [how to build partial (relocatable) object files])
-AC_ARG_VAR([RC], [which resource compiler to use])
-AC_ARG_VAR([MANIFEST_TOOL], [which manifest generator to use])
-AC_ARG_VAR([STRIP], [Program used to perform stripping])
-AC_ARG_VAR([FLEXLINKFLAGS],
-  [Supplementary flags passed to flexlink (Windows targets)])
+AC_ARG_VAR([RC], [program for compiling Windows Resource files])
+AC_ARG_VAR([MANIFEST_TOOL], [program used to generate manifests (Windows)])
+AC_ARG_VAR([STRIP], [program used to perform stripping])
+AC_ARG_VAR([FLEXLINKFLAGS], [extra flags to give to flexlink (Windows targets)])
 
 AC_ARG_VAR([COMPILER_BYTECODE_CFLAGS],
   [CFLAGS for compiling C files to be linked with bytecode])
@@ -712,7 +711,7 @@ AC_ARG_ENABLE([force-safe-string], [],
     [AC_MSG_ERROR([Support for mutable strings was removed in OCaml 5.0.])])],
   [])
 
-AC_ARG_VAR([DEFAULT_STRING], [])
+AC_ARG_VAR([DEFAULT_STRING], [obsolete])
 AS_IF([test x"$DEFAULT_STRING" = "xunsafe"],
   [AC_MSG_ERROR([Support for mutable strings was removed in OCaml 5.0.])])
 
