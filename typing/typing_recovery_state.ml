@@ -71,7 +71,9 @@ let flush_saved_types () =
     let open Ast_helper in
     let pconst_desc = Saved_parts.store parts in
     let pexp = Exp.constant { pconst_desc; pconst_loc = !default_loc } in
-    let pstr = Str.eval pexp in
+    (* Explicit Ast_helper.Str here so that ocamldep doesn't read that as
+       otherlibs' Str *)
+    let pstr = Ast_helper.Str.eval pexp in
     [ Attr.mk Saved_parts.attribute (Parsetree.PStr [ pstr ]) ]
 
 let incorrect_attribute =
