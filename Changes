@@ -328,7 +328,7 @@ Working version
 
 - #14552: Export `AR` and `ARFLAGS` in Makefile.config.
   Deprecate `ARCMD`.
-  (Antonin Décimo, review by David Allsopp)
+  (Antonin Décimo, review by David Allsopp and Samuel Hym)
 
 - #14676: Security fix: prevent shell injection in Github Actions workflows
   (Austin Thierault, review by Antonin Décimo, Edwin Török, David Allsopp and

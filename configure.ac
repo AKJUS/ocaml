@@ -918,10 +918,7 @@ AS_CASE([$target],
         [machine=""])
       mklib="link -lib -nologo $machine /out:\$(1) \$(2)"
     ],
-  [
-    : ${ARFLAGS:=rc}
-    mklib="rm -f \$(1) && ${AR} ${ARFLAGS} \$(1) \$(2)"
-  ])
+  [mklib="rm -f \$(1) && ${AR} c${ARFLAGS:=r} \$(1) \$(2)"])
 
 ## In cross-compilation mode, can we run executables produced?
 # At the moment, it's required, but the fact is used in C99 function detection
