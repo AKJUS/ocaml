@@ -1811,7 +1811,10 @@ and transl_signature env sg =
         let aliasable = Env.is_aliasable path env in
         let md =
           if not aliasable then
-            md
+            { md with
+              md_loc = pms.pms_loc;
+              md_uid = Uid.mk ~current_unit:(Env.get_current_unit ());
+            }
           else
             { md_type = Mty_alias path;
               md_attributes = pms.pms_attributes;

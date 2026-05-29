@@ -127,10 +127,9 @@ Error: Destructive substitutions are not supported for constrained
    was originally declared instead of the substitution site, and the
    substituted module's [md_uid] was shared with the original module's
    uid so that the unused-module check never fired for the
-   single-compilation-unit repro. At this commit the warning does not
-   fire here in either default or principal mode. The next commit
-   fixes typing/typemod.ml so the warning fires at the substitution
-   site in both modes, and updates this expected output accordingly. *)
+   single-compilation-unit repro. The test below pins the post-fix
+   behavior: the warning fires at the substitution site in both default
+   and principal modes. *)
 [@@@warning "+60"]
 
 module A = struct
@@ -148,5 +147,10 @@ module type T = sig
   end
 end;;
 [%%expect{|
+Line 3, characters 4-23:
+3 |     module Bar := X.Foo
+        ^^^^^^^^^^^^^^^^^^^
+Warning 60 [unused-module]: unused module "Bar".
+
 module type T = sig module G : (X : A.S) -> sig end end
 |}]
