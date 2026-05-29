@@ -121,3 +121,32 @@ Error: Destructive substitutions are not supported for constrained
        types (other than when replacing a type constructor with
        a type constructor with the same arguments).
 |}]
+
+(* #12745: on a non-aliasable module substitution, warning 60 used to
+   report a location in the source file where the substituted module
+   was originally declared instead of the substitution site, and the
+   substituted module's [md_uid] was shared with the original module's
+   uid so that the unused-module check never fired for the
+   single-compilation-unit repro. At this commit the warning does not
+   fire here in either default or principal mode. The next commit
+   fixes typing/typemod.ml so the warning fires at the substitution
+   site in both modes, and updates this expected output accordingly. *)
+[@@@warning "+60"]
+
+module A = struct
+  module type S = sig
+    module Foo : sig end
+  end
+end;;
+[%%expect{|
+module A : sig module type S = sig module Foo : sig end end end
+|}]
+
+module type T = sig
+  module G (X : A.S) : sig
+    module Bar := X.Foo
+  end
+end;;
+[%%expect{|
+module type T = sig module G : (X : A.S) -> sig end end
+|}]
