@@ -249,7 +249,11 @@ end = struct
             | Some us' -> Path.Pident (Ident.of_unscoped us')
 
   let copy_path id_map p =
-    if Path.contains_unscoped_ident p then copy_path id_map p else p
+    match id_map with
+    | [] -> p
+    | _ ->
+        if Path.contains_unscoped_ident p then copy_path id_map p
+        else p
 
   let deep_copy_package id_map copy {pack_path; pack_constraints} =
     {pack_path = copy_path id_map pack_path;
