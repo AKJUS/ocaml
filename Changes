@@ -351,6 +351,13 @@ Working version
   captured local types from under an or-pattern.
   (Florian Angeletti, report by Richard Eisenberg, review by Jacques Garrigue)
 
+- #12745, #14831: fix warning 60 source location on non-aliasable module
+  substitutions, and decouple the substituted module's `md_uid` from the
+  aliased module's uid so the warning fires on single-compilation-unit
+  local aliases.
+  (Ryan James Stewart, review by Stefan Muenzel, Gabriel Scherer, and
+   Florian Angeletti)
+
 OCaml 5.5.0
 -----------
 
