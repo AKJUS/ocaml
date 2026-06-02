@@ -1222,8 +1222,8 @@ let fa1_applied = fa1 ()
 
 [%%expect{|
 module type M_arrow1 = sig type 'a t = int -> 'a end
-val fa1 : unit -> (module M_arrow1) -> int -> 'a = <fun>
-val fa1_applied : (module M_arrow1) -> int -> 'a = <fun>
+val fa1 : unit -> (module M : M_arrow1) -> int -> 'a = <fun>
+val fa1_applied : (module M : M_arrow1) -> int -> 'a = <fun>
 |}]
 
 module type M_arrow2 = sig
@@ -1236,8 +1236,8 @@ let fa2_applied = fa2 ()
 
 [%%expect{|
 module type M_arrow2 = sig type 'a t = 'a -> int end
-val fa2 : unit -> (module M_arrow2) -> 'a -> int = <fun>
-val fa2_applied : (module M_arrow2) -> '_weak4 -> int = <fun>
+val fa2 : unit -> (module M : M_arrow2) -> 'a -> int = <fun>
+val fa2_applied : (module M : M_arrow2) -> '_weak4 -> int = <fun>
 |}]
 
 module type Typ2 = sig
@@ -1519,4 +1519,15 @@ Line 1, characters 62-64:
 1 | let too_many_arg_bis = map (module Iarray) succ [| 0; 1; 2 |] ()
                                                                   ^^
   This extra argument is not expected.
+|}]
+
+module type S = sig type t type e val v : e -> t end
+let helper (type a) (module M : S with type t = a) _ : a = assert false
+let outer (type a) (type b) (module M : S with type e = a and type t = b) e =
+  helper (module M) (M.v e)
+[%%expect {|
+module type S = sig type t type e val v : e -> t end
+val helper : (module S with type t = 'a) -> 'b -> 'a = <fun>
+val outer : (module M : S with type e = 'a and type t = 'b) -> 'a -> M.t =
+  <fun>
 |}]

@@ -1200,14 +1200,21 @@ let limited_generalize_class_type rv ~inside:cty =
 
 type inv_type_expr =
     { inv_type : type_expr;
-      mutable inv_parents : inv_type_expr list }
+      mutable inv_parents : inv_type_expr list;
+      mutable inv_paths: Path.t list }
 
 let rec inv_type hash pty ty =
   try
     let inv = TypeHash.find hash ty in
+    Option.iter (fun (p,_) -> inv.inv_paths <- p :: inv.inv_paths)
+      (get_abbrev ty);
     inv.inv_parents <- pty @ inv.inv_parents
   with Not_found ->
-    let inv = { inv_type = ty; inv_parents = pty } in
+    let inv_paths = match get_abbrev ty with
+      | None -> []
+      | Some (p, _) -> [p]
+    in
+    let inv = { inv_type = ty; inv_paths; inv_parents = pty } in
     TypeHash.add hash ty inv;
     iter_type_expr (inv_type hash [inv]) ty
 
@@ -1261,18 +1268,28 @@ let type_subexpressions_with_free_occurrences ids ty =
         nodes := TypeSet.add inv.inv_type !nodes;
         List.iter (add_all_parents ids) inv.inv_parents
   in
-  TypeHash.iter (fun ty inv ->
+  let occurrence_in_desc inv ty =
     match get_desc ty with
     | Tconstr (p, _, _) | Tobject (_, {contents = Some (p, _)})
     | Tfunctor (_, _, {pack_path = p}, _) | Tpackage {pack_path = p}
       when Path.exists_free ids p ->
-        add_all_parents ids inv
+        add_all_parents ids inv; true
     | Tvariant row ->
       begin match row_name row with
-      | Some (p, _) when Path.exists_free ids p -> add_all_parents ids inv
-      | _ -> ()
+      | Some (p, _) when Path.exists_free ids p ->
+          add_all_parents ids inv; true
+      | _ -> false
       end
-    | _ -> ()) inverted;
+    | _ -> false
+  in
+  let occurrence_in_expansion inv =
+    if List.exists (Path.exists_free ids) inv.inv_paths then
+      add_all_parents ids inv
+  in
+  TypeHash.iter (fun ty inv ->
+      if occurrence_in_desc inv ty then () else
+        occurrence_in_expansion inv
+    ) inverted;
   !nodes
 
 let fully_generic ty =
@@ -1475,6 +1492,7 @@ let rec copy ?partial ?keep_names ?scope ?(unscoped = empty_unscoped_mapping)
     let desc' =
       match ty_expand with
         Some (path, args) ->
+          let path = Path.subst unscoped.map path in
           let args = List.map copy args in
           let t' = new_scoped_ty ty_scope desc' in
           Texpand (t', path, args)
