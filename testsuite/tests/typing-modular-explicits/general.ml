@@ -1222,8 +1222,8 @@ let fa1_applied = fa1 ()
 
 [%%expect{|
 module type M_arrow1 = sig type 'a t = int -> 'a end
-val fa1 : unit -> (module M : M_arrow1) -> int -> 'a = <fun>
-val fa1_applied : (module M : M_arrow1) -> int -> 'a = <fun>
+val fa1 : unit -> (module M : M_arrow1) -> 'a M.t = <fun>
+val fa1_applied : (module M : M_arrow1) -> 'a M.t = <fun>
 |}]
 
 module type M_arrow2 = sig
@@ -1236,8 +1236,8 @@ let fa2_applied = fa2 ()
 
 [%%expect{|
 module type M_arrow2 = sig type 'a t = 'a -> int end
-val fa2 : unit -> (module M : M_arrow2) -> 'a -> int = <fun>
-val fa2_applied : (module M : M_arrow2) -> '_weak4 -> int = <fun>
+val fa2 : unit -> (module M : M_arrow2) -> 'a M.t = <fun>
+val fa2_applied : (module M : M_arrow2) -> '_weak4 M.t = <fun>
 |}]
 
 module type Typ2 = sig
@@ -1528,6 +1528,6 @@ let outer (type a) (type b) (module M : S with type e = a and type t = b) e =
 [%%expect {|
 module type S = sig type t type e val v : e -> t end
 val helper : (module S with type t = 'a) -> 'b -> 'a = <fun>
-val outer : (module M : S with type e = 'a and type t = 'b) -> 'a -> M.t =
+val outer : (module M : S with type e = 'a and type t = 'b) -> M.e -> M.t =
   <fun>
 |}]

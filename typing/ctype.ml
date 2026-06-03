@@ -1732,7 +1732,7 @@ let copy_sep ~copy_scope ~fixed ~(visited : type_expr TypeHash.t) ~id_map sch =
       let t = newstub ~scope:(get_scope ty) in
       TypeHash.add visited ty t;
       let desc' =
-        match get_desc ty with
+        match get_folded_desc ~keep_Tvar:false ty with
         | Tvariant row ->
             let more = row_more row in
             (* We shall really check the level on the row variable *)
