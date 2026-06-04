@@ -1210,12 +1210,12 @@ let rec inv_type hash pty ty =
       (get_abbrev ty);
     inv.inv_parents <- pty @ inv.inv_parents
   with Not_found ->
-    let inv_paths = match get_abbrev ty with
-      | None -> []
-      | Some (p, _) -> [p]
-    in
-    let inv = { inv_type = ty; inv_paths; inv_parents = pty } in
+    let inv = { inv_type = ty; inv_paths=[]; inv_parents = pty } in
     TypeHash.add hash ty inv;
+    iter_abbrev (fun p args ->
+        inv.inv_paths <- [p];
+        List.iter (inv_type hash [inv]) args
+      ) ty;
     iter_type_expr (inv_type hash [inv]) ty
 
 let compute_univars ty =
