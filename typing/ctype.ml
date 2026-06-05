@@ -1200,22 +1200,18 @@ let limited_generalize_class_type rv ~inside:cty =
 
 type inv_type_expr =
     { inv_type : type_expr;
-      mutable inv_parents : inv_type_expr list;
-      mutable inv_paths: Path.t list }
+      mutable inv_parents : inv_type_expr list }
 
 let rec inv_type hash pty ty =
   try
     let inv = TypeHash.find hash ty in
-    Option.iter (fun (p,_) -> inv.inv_paths <- p :: inv.inv_paths)
-      (get_abbrev ty);
     inv.inv_parents <- pty @ inv.inv_parents
   with Not_found ->
-    let inv = { inv_type = ty; inv_paths=[]; inv_parents = pty } in
+    let inv = { inv_type = ty; inv_parents = pty } in
     TypeHash.add hash ty inv;
-    iter_abbrev (fun p args ->
-        inv.inv_paths <- [p];
-        List.iter (inv_type hash [inv]) args
-      ) ty;
+    iter_abbrev (fun _ args ->
+      List.iter (inv_type hash [inv]) args
+    ) ty;
     iter_type_expr (inv_type hash [inv]) ty
 
 let compute_univars ty =
@@ -1283,8 +1279,9 @@ let type_subexpressions_with_free_occurrences ids ty =
     | _ -> false
   in
   let occurrence_in_expansion inv =
-    if List.exists (Path.exists_free ids) inv.inv_paths then
-      add_all_parents ids inv
+    iter_abbrev
+      (fun p _ -> if Path.exists_free ids p then add_all_parents ids inv)
+      inv.inv_type
   in
   TypeHash.iter (fun ty inv ->
       if occurrence_in_desc inv ty then () else
