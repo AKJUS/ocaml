@@ -751,12 +751,10 @@ NMEDIT
 DSYMUTIL
 AWK
 RANLIB
-STRIP
 ac_ct_AR
 DLLTOOL
 OBJDUMP
 FILECMD
-LN_S
 NM
 ac_ct_DUMPBIN
 DUMPBIN
@@ -785,6 +783,7 @@ COMPILER_NATIVE_CFLAGS
 COMPILER_BYTECODE_CPPFLAGS
 COMPILER_BYTECODE_CFLAGS
 FLEXLINKFLAGS
+STRIP
 MANIFEST_TOOL
 RC
 PARTIALLD
@@ -893,6 +892,7 @@ natdynlinkopts
 natdynlink
 supports_shared_libraries
 mklib
+ARFLAGS
 AR
 launch_method_target
 launch_method
@@ -924,7 +924,7 @@ syslib
 outputobj
 outputexe
 ocamlyacc_wstr_module
-ln
+LN_S
 unix_or_win32
 ocamlsrcdir
 systhread_support
@@ -1084,11 +1084,14 @@ enable_libtool_lock
       ac_precious_vars='build_alias
 host_alias
 target_alias
+AR
+ARFLAGS
 AS
 ASPP
 PARTIALLD
 RC
 MANIFEST_TOOL
+STRIP
 FLEXLINKFLAGS
 COMPILER_BYTECODE_CFLAGS
 COMPILER_BYTECODE_CPPFLAGS
@@ -1815,14 +1818,17 @@ Optional Packages:
   --with-odoc
 
 Some influential environment variables:
-  AS          which assembler to use
-  ASPP        which assembler (with preprocessor) to use
+  AR          archive-maintaining program
+  ARFLAGS     flags to give the archive-maintaining program
+  AS          program for compiling assembly files
+  ASPP        program for preprocessing and compiling assembly files
   PARTIALLD   how to build partial (relocatable) object files
-  RC          which resource compiler to use
+  RC          program for compiling Windows Resource files
   MANIFEST_TOOL
-              which manifest generator to use
+              program used to generate manifests (Windows)
+  STRIP       program used to perform stripping
   FLEXLINKFLAGS
-              Supplementary flags passed to flexlink (Windows targets)
+              extra flags to give to flexlink (Windows targets)
   COMPILER_BYTECODE_CFLAGS
               CFLAGS for compiling C files to be linked with bytecode
   COMPILER_BYTECODE_CPPFLAGS
@@ -1846,7 +1852,7 @@ Some influential environment variables:
   WINDOWS_UNICODE_MODE
               how to handle Unicode under Windows: ansi, compatible
   DEFAULT_STRING
-
+              obsolete
   CC          C compiler command
   CFLAGS      C compiler flags
   LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
@@ -3595,6 +3601,7 @@ LINEAR_MAGIC_NUMBER=Caml1999L038
 
 
 
+
  # TODO: rename this variable
 
 
@@ -4074,6 +4081,8 @@ case $target in #(
 esac
 
 # Environment variables that are taken into account
+
+
 
 
 
@@ -15207,7 +15216,7 @@ case $target in #(
   # In config/Makefile.mingw*, we had:
   # TARGET=i686-w64-mingw32 and x86_64-w64-mingw32
   # TOOLPREF=$(TARGET)-
-  # ARCMD=$(TOOLPREF)ar
+  # AR=$(TOOLPREF)ar
   # However autoconf and libtool seem to use ar
   # So we let them do, at the moment
   *-pc-windows) :
@@ -15224,9 +15233,7 @@ fi
       mklib="link -lib -nologo $machine /out:\$(1) \$(2)"
      ;; #(
   *) :
-
-    mklib="rm -f \$(1) && ${AR} rc \$(1) \$(2)"
-   ;;
+    mklib="rm -f \$(1) && ${AR} c${ARFLAGS:=r} \$(1) \$(2)" ;;
 esac
 
 ## In cross-compilation mode, can we run executables produced?
@@ -15318,9 +15325,9 @@ case $cygwin_build_env,$host in #(
 printf %s "checking for a workable solution for ln -sf... " >&6; }
   if MSYS=winsymlinks:nativestrict CYGWIN=winsymlinks:nativestrict ln -sf configure conftestLink 2>/dev/null
 then :
-  ln='ln -sf'
+  LN_S='ln -sf'
 else $as_nop
-  ln='cp -pf'
+  LN_S='cp -pRf'
 
 fi
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ln" >&5
@@ -15328,7 +15335,7 @@ printf "%s\n" "$ln" >&6; }
 
     ocamlsrcdir="$(LC_ALL=C.UTF-8 cygpath -w -- "$srcdir_abs")" ;; #(
   *) :
-    ln='ln -sf'
+    LN_S='ln -sf'
   ocamlsrcdir="$srcdir_abs" ;;
 esac
 

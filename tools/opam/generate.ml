@@ -18,7 +18,7 @@
    Parameters are the following Makefile variables:
      $1 = $(INSTALL_MODE) (opam or clone)
      $2 = $(OPAM_PACKAGE_NAME)
-     $3 = $(LN) *)
+     $3 = $(LN_S) *)
 
 let exit_because fmt = Printf.ksprintf (fun s -> prerr_endline s; exit 1) fmt
 

@@ -186,7 +186,7 @@ AC_SUBST([oc_native_cppflags])
 AC_SUBST([systhread_support])
 AC_SUBST([ocamlsrcdir])
 AC_SUBST([unix_or_win32])
-AC_SUBST([ln])
+AC_SUBST([LN_S])
 AC_SUBST([ocamlyacc_wstr_module])
 AC_SUBST([outputexe])
 AC_SUBST([outputobj])
@@ -220,6 +220,7 @@ AC_SUBST([shebangscripts])
 AC_SUBST([launch_method])
 AC_SUBST([launch_method_target])
 AC_SUBST([AR])
+AC_SUBST([ARFLAGS])
 AC_SUBST([mklib])
 AC_SUBST([supports_shared_libraries])
 AC_SUBST([natdynlink])
@@ -483,14 +484,15 @@ AS_CASE([$target],
 
 # Environment variables that are taken into account
 
-AC_ARG_VAR([AS], [which assembler to use])
-AC_ARG_VAR([ASPP], [which assembler (with preprocessor) to use])
+AC_ARG_VAR([AR], [archive-maintaining program])
+AC_ARG_VAR([ARFLAGS], [flags to give the archive-maintaining program])
+AC_ARG_VAR([AS], [program for compiling assembly files])
+AC_ARG_VAR([ASPP], [program for preprocessing and compiling assembly files])
 AC_ARG_VAR([PARTIALLD], [how to build partial (relocatable) object files])
-AC_ARG_VAR([RC], [which resource compiler to use])
-AC_ARG_VAR([MANIFEST_TOOL], [which manifest generator to use])
-
-AC_ARG_VAR([FLEXLINKFLAGS],
-  [Supplementary flags passed to flexlink (Windows targets)])
+AC_ARG_VAR([RC], [program for compiling Windows Resource files])
+AC_ARG_VAR([MANIFEST_TOOL], [program used to generate manifests (Windows)])
+AC_ARG_VAR([STRIP], [program used to perform stripping])
+AC_ARG_VAR([FLEXLINKFLAGS], [extra flags to give to flexlink (Windows targets)])
 
 AC_ARG_VAR([COMPILER_BYTECODE_CFLAGS],
   [CFLAGS for compiling C files to be linked with bytecode])
@@ -709,7 +711,7 @@ AC_ARG_ENABLE([force-safe-string], [],
     [AC_MSG_ERROR([Support for mutable strings was removed in OCaml 5.0.])])],
   [])
 
-AC_ARG_VAR([DEFAULT_STRING], [])
+AC_ARG_VAR([DEFAULT_STRING], [obsolete])
 AS_IF([test x"$DEFAULT_STRING" = "xunsafe"],
   [AC_MSG_ERROR([Support for mutable strings was removed in OCaml 5.0.])])
 
@@ -903,7 +905,7 @@ AS_CASE([$target],
   # In config/Makefile.mingw*, we had:
   # TARGET=i686-w64-mingw32 and x86_64-w64-mingw32
   # TOOLPREF=$(TARGET)-
-  # ARCMD=$(TOOLPREF)ar
+  # AR=$(TOOLPREF)ar
   # However autoconf and libtool seem to use ar
   # So we let them do, at the moment
   [*-pc-windows],
@@ -916,9 +918,7 @@ AS_CASE([$target],
         [machine=""])
       mklib="link -lib -nologo $machine /out:\$(1) \$(2)"
     ],
-  [
-    mklib="rm -f \$(1) && ${AR} rc \$(1) \$(2)"
-  ])
+  [mklib="rm -f \$(1) && ${AR} c${ARFLAGS:=r} \$(1) \$(2)"])
 
 ## In cross-compilation mode, can we run executables produced?
 # At the moment, it's required, but the fact is used in C99 function detection
@@ -967,7 +967,7 @@ AS_CASE([$cygwin_build_env,$host],
   [true,*-w64-mingw32*|true,*-pc-windows],
     [OCAML_CHECK_LN_ON_WINDOWS
     ocamlsrcdir="$(LC_ALL=C.UTF-8 cygpath -w -- "$srcdir_abs")"],
-  [ln='ln -sf'
+  [LN_S='ln -sf'
   ocamlsrcdir="$srcdir_abs"])
 
 # Whether ar supports @FILE arguments
