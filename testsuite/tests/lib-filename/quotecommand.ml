@@ -143,9 +143,15 @@ let _ =
 (* The two characters quote_cmd_filename cannot quote (double-quote and %) must
    be rejected with Failure, in the program name and in any redirection file. *)
 let check_raises descr f =
-  match f () with
-  | _ -> printf "%s: no exception (BUG)\n" descr
-  | exception Failure _ -> printf "%s: Failure (ok)\n" descr
+  let raised_failure =
+    match f () with
+    | _ -> false
+    | exception Failure _ -> true
+  in
+  if raised_failure = Sys.win32 then
+    printf "%s: OK\n" descr
+  else
+    printf "%s: ERROR\n" descr
 
 let _ =
   printf "-------- Rejected (unquotable) characters\n";
