@@ -1,2 +1,11 @@
-Command: "\"true  >output&false\""
-Result: 1
+==== Executable (legal file name) targets, must not inject
+stdout &: "\"true  >out&false\"" -> 1
+stdout &&: "\"true  >out&&false\"" -> 1
+stdout (): "\"true  >out(false)\"" -> 0
+stderr &: "\"true  2>err&false\"" -> 1
+==== Illegal file-name targets, must be quoted
+stdout |: "\"true  >out|false\""
+stdout <: "\"true  >out<false\""
+stdout >: "\"true  >out>false\""
+stdin  |: "\"true  <in|false\""
+stderr |: "\"true  2>err|false\""
