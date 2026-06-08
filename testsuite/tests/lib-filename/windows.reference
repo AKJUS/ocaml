@@ -1,0 +1,2 @@
+Command: "\"true  >output&false\""
+Result: 1
