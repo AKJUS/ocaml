@@ -1278,14 +1278,14 @@ let type_subexpressions_with_free_occurrences ids ty =
       end
     | _ -> false
   in
-  let occurrence_in_expansion inv =
+  let occurrence_in_abbrev inv =
     iter_abbrev
       (fun p _ -> if Path.exists_free ids p then add_all_parents ids inv)
       inv.inv_type
   in
   TypeHash.iter (fun ty inv ->
       if occurrence_in_desc inv ty then () else
-        occurrence_in_expansion inv
+        occurrence_in_abbrev inv
     ) inverted;
   !nodes
 
