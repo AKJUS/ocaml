@@ -1209,6 +1209,9 @@ let rec inv_type hash pty ty =
   with Not_found ->
     let inv = { inv_type = ty; inv_parents = pty } in
     TypeHash.add hash ty inv;
+    iter_abbrev (fun _ args ->
+      List.iter (inv_type hash [inv]) args
+    ) ty;
     iter_type_expr (inv_type hash [inv]) ty
 
 let compute_univars ty =
@@ -1261,18 +1264,29 @@ let type_subexpressions_with_free_occurrences ids ty =
         nodes := TypeSet.add inv.inv_type !nodes;
         List.iter (add_all_parents ids) inv.inv_parents
   in
-  TypeHash.iter (fun ty inv ->
+  let occurrence_in_desc inv ty =
     match get_desc ty with
     | Tconstr (p, _, _) | Tobject (_, {contents = Some (p, _)})
     | Tfunctor (_, _, {pack_path = p}, _) | Tpackage {pack_path = p}
       when Path.exists_free ids p ->
-        add_all_parents ids inv
+        add_all_parents ids inv; true
     | Tvariant row ->
       begin match row_name row with
-      | Some (p, _) when Path.exists_free ids p -> add_all_parents ids inv
-      | _ -> ()
+      | Some (p, _) when Path.exists_free ids p ->
+          add_all_parents ids inv; true
+      | _ -> false
       end
-    | _ -> ()) inverted;
+    | _ -> false
+  in
+  let occurrence_in_abbrev inv =
+    iter_abbrev
+      (fun p _ -> if Path.exists_free ids p then add_all_parents ids inv)
+      inv.inv_type
+  in
+  TypeHash.iter (fun ty inv ->
+      if occurrence_in_desc inv ty then () else
+        occurrence_in_abbrev inv
+    ) inverted;
   !nodes
 
 let fully_generic ty =
@@ -1475,6 +1489,7 @@ let rec copy ?partial ?keep_names ?scope ?(unscoped = empty_unscoped_mapping)
     let desc' =
       match ty_expand with
         Some (path, args) ->
+          let path = Path.subst unscoped.map path in
           let args = List.map copy args in
           let t' = new_scoped_ty ty_scope desc' in
           Texpand (t', path, args)
@@ -1714,7 +1729,7 @@ let copy_sep ~copy_scope ~fixed ~(visited : type_expr TypeHash.t) ~id_map sch =
       let t = newstub ~scope:(get_scope ty) in
       TypeHash.add visited ty t;
       let desc' =
-        match get_desc ty with
+        match get_folded_desc ~keep_Tvar:false ty with
         | Tvariant row ->
             let more = row_more row in
             (* We shall really check the level on the row variable *)
