@@ -207,7 +207,9 @@ Quoting commands for execution by cmd.exe is difficult.
     in
     if String.exists (function '\"' | '%' -> true | _ -> false) f then
       failwith ("Filename.quote_command: bad file name " ^ f)
-    else if String.contains f ' ' then
+    else if String.exists (function
+              | ' ' | '(' | ')' | '^' | '<' | '>' | '&' | '|' -> true
+              | _ -> false) f then
       String.concat "" ["\""; f; "\""]
     else
       f

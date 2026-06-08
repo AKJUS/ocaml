@@ -40,26 +40,21 @@ argv[9] = {|dolore|}
 argv[1] = {|alea iacta est|}
 -------- Metacharacters in program name
 -- my&echo.exe
-'.\my' is not recognized as an internal or external command,
-operable program or batch file.
-exe "per aspera" "ad astra"
+argv[1] = {|per aspera|}
+argv[2] = {|ad astra|}
 -- my(echo).exe
-'.\my' is not recognized as an internal or external command,
-operable program or batch file.
-!!! .\my(echo).exe failed
+argv[1] = {|per aspera|}
+argv[2] = {|ad astra|}
 -- my^echo.exe
 argv[1] = {|per aspera|}
 argv[2] = {|ad astra|}
 -------- Redirection to names with metacharacters
-'put.tmp' is not recognized as an internal or external command,
-operable program or batch file.
-!!! ./myecho.exe failed
 -- out&put.tmp:
-Could not open "out&put.tmp"
+argv[1] = {|lux et veritas|}
 -- out(put).tmp:
 argv[1] = {|lux et veritas|}
 -- out^put.tmp:
-Could not open "out^put.tmp"
+argv[1] = {|lux et veritas|}
 -- a & b.tmp:
 argv[1] = {|lux et veritas|}
 -------- Adversarial arguments
