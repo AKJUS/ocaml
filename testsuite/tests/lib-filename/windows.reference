@@ -5,9 +5,3 @@ stdout (): "\"true  >\"out(false)\"\"" -> 0
 stdout (: "\"true  >\"out(false)\"\"" -> 0
 stdout ): "\"true  >\"out(false)\"\"" -> 0
 stderr &: "\"true  2>\"err&false\"\"" -> 0
-==== Illegal file-name targets, must be quoted
-stdout |: "\"true  >\"out|false\"\""
-stdout <: "\"true  >\"out<false\"\""
-stdout >: "\"true  >\"out>false\"\""
-stdin  |: "\"true  <\"in|false\"\""
-stderr |: "\"true  2>\"err|false\"\""

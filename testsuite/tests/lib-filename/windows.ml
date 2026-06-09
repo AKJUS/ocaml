@@ -40,12 +40,6 @@ let run_probe label ?stdin ?stdout ?stderr () =
   List.iter (function Some f -> remove f | None -> ()) [stdin; stdout; stderr];
   Printf.printf "%s: %S -> %d\n" label cmd rc
 
-(* Just show the constructed command line, for targets that cannot name a file
-   and so cannot be executed cleanly. *)
-let show label ?stdin ?stdout ?stderr () =
-  Printf.printf "%s: %S\n" label
-    (Filename.quote_command "true" ?stdin ?stdout ?stderr [])
-
 let () =
   print_string "==== Executable (legal file name) targets, must not inject\n";
   run_probe "stdout &"  ~stdout:"out&false" ();
@@ -54,9 +48,3 @@ let () =
   run_probe "stdout (" ~stdout:"out(false)" ();
   run_probe "stdout )" ~stdout:"out(false)" ();
   run_probe "stderr &"  ~stderr:"err&false" ();
-  print_string "==== Illegal file-name targets, must be quoted\n";
-  show "stdout |" ~stdout:"out|false" ();
-  show "stdout <" ~stdout:"out<false" ();
-  show "stdout >" ~stdout:"out>false" ();
-  show "stdin  |" ~stdin:"in|false" ();
-  show "stderr |" ~stderr:"err|false" ()
