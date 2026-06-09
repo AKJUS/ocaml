@@ -45,7 +45,16 @@ argv[2] = {|ad astra|}
 -- my(echo).exe
 argv[1] = {|per aspera|}
 argv[2] = {|ad astra|}
+-- my(echo.exe
+argv[1] = {|per aspera|}
+argv[2] = {|ad astra|}
+-- my)echo.exe
+argv[1] = {|per aspera|}
+argv[2] = {|ad astra|}
 -- my^echo.exe
+argv[1] = {|per aspera|}
+argv[2] = {|ad astra|}
+-- my!echo.exe
 argv[1] = {|per aspera|}
 argv[2] = {|ad astra|}
 -------- Redirection to names with metacharacters
@@ -53,7 +62,13 @@ argv[2] = {|ad astra|}
 argv[1] = {|lux et veritas|}
 -- out(put).tmp:
 argv[1] = {|lux et veritas|}
+-- out(put.tmp:
+argv[1] = {|lux et veritas|}
+-- out)put.tmp:
+argv[1] = {|lux et veritas|}
 -- out^put.tmp:
+argv[1] = {|lux et veritas|}
+-- out!put.tmp:
 argv[1] = {|lux et veritas|}
 -- a & b.tmp:
 argv[1] = {|lux et veritas|}

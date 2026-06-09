@@ -123,7 +123,7 @@ let _ =
     printf "-- %s\n" name;
     run prog ["per aspera"; "ad astra"];
     Sys.remove name)
-    ["my&echo.exe"; "my(echo).exe"; "my^echo.exe"]
+    ["my&echo.exe"; "my(echo).exe"; "my(echo.exe"; "my)echo.exe"; "my^echo.exe"; "my!echo.exe"]
 
 let _ =
   printf "-------- Redirection to names with metacharacters\n";
@@ -131,7 +131,7 @@ let _ =
     run echo_exe ~stdout:fn ["lux et veritas"];
     printf "-- %s:\n" fn;
     cat_and_rm_file fn)
-    ["out&put.tmp"; "out(put).tmp"; "out^put.tmp"; "a & b.tmp"]
+    ["out&put.tmp"; "out(put).tmp"; "out(put.tmp"; "out)put.tmp"; "out^put.tmp"; "out!put.tmp"; "a & b.tmp"]
 
 (* Arguments go through quote then quote_cmd.  Check that variable expansion is
    suppressed and that trailing backslashes survive the C-runtime quoting. *)

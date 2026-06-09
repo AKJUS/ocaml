@@ -51,6 +51,8 @@ let () =
   run_probe "stdout &"  ~stdout:"out&false" ();
   run_probe "stdout &&" ~stdout:"out&&false" ();
   run_probe "stdout ()" ~stdout:"out(false)" ();
+  run_probe "stdout (" ~stdout:"out(false)" ();
+  run_probe "stdout )" ~stdout:"out(false)" ();
   run_probe "stderr &"  ~stderr:"err&false" ();
   print_string "==== Illegal file-name targets, must be quoted\n";
   show "stdout |" ~stdout:"out|false" ();
