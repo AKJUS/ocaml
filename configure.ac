@@ -3019,7 +3019,14 @@ AS_CASE(["$toolchain"],
     # line.  /GS- disables compilation of runtime security checks and
     # /NOCOFFGRPINFO is an undocumented linker flag which removes the debug
     # directory from the PE+ image.
+    # Prevent Clang 21 and later from synthesizing a call to wcslen when
+    # building header.obj by passing -fno-builtin-wcslen. As tmpheader.exe is
+    # solely linked with kernel32.lib but not with the CRT, wcslen isn't found
+    # and the linker errors.
     header_cflags='/GS- /Os'
+    AS_CASE([$ocaml_cc_vendor],
+      [msvc-*-clang-*],
+        [header_cflags="$header_cflags -fno-builtin-wcslen"])
     header_ldflags='/NOCOFFGRPINFO /subsystem:console'
     header_libs='kernel32.lib'],
   [header_cflags=''
