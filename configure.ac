@@ -312,6 +312,9 @@ AC_SUBST([runtime_search])
 AC_SUBST([runtime_search_target])
 AC_SUBST([cc_extra_warnings])
 AC_SUBST([cxx_extra_warnings])
+AC_SUBST([header_cflags])
+AC_SUBST([header_ldflags])
+AC_SUBST([header_libs])
 
 ## Generated files
 
@@ -2989,6 +2992,39 @@ AS_IF([test x"$with_afl" = "xyes"],
 # info for both C and OCaml
 AS_IF([test "$ccomp_type" != "msvc"],
   [internal_cflags="-g $internal_cflags"])
+
+# The mingw-w64 and MSVC versions of tmpheader.exe are linked with special flags
+# to reduce their size (considerably). In particular, the entry point is
+# overridden, which prevents the linking of crt0.
+AS_CASE(["$toolchain"],
+  [mingw],
+    [# mingw-w64: optimise header.o for space and remove all unused sections
+    # during linking.
+    header_cflags='-Os'
+    AS_IF([test "$system" = "mingw"],
+      [entrypoint='_wmainCRTStartup'],
+      [entrypoint='wmainCRTStartup'])
+    # Certainly for GCC, -nostdlib automatically adds -nostartfiles (clang's
+    # documentation is not explicit on this point, but it would be unusual for
+    # clang and GCC to differ). --gc-sections removes unreferenced code and data
+    # sections.
+    header_ldflags=\
+"-nostdlib -nostartfiles -Wl,--gc-sections -Wl,-e,$entrypoint"
+    header_libs='-lkernel32'],
+  [msvc],
+    [# MSVC: Optimise header.obj for space. cl doesn't have an equivalent of
+    # -nostdlib, however it also doesn't have default libraries in the same way
+    # as GCC - the equivalent of crt0.o is linked because it provides the entry
+    # point symbol, rather than by being explicitly added to the linking command
+    # line.  /GS- disables compilation of runtime security checks and
+    # /NOCOFFGRPINFO is an undocumented linker flag which removes the debug
+    # directory from the PE+ image.
+    header_cflags='/GS- /Os'
+    header_ldflags='/NOCOFFGRPINFO /subsystem:console'
+    header_libs='kernel32.lib'],
+  [header_cflags=''
+  header_ldflags=''
+  header_libs=''])
 
 oc_cflags="$common_cflags $internal_cflags"
 oc_cppflags="$common_cppflags $internal_cppflags"

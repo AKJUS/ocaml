@@ -800,6 +800,9 @@ build_os
 build_vendor
 build_cpu
 build
+header_libs
+header_ldflags
+header_cflags
 cxx_extra_warnings
 cc_extra_warnings
 runtime_search_target
@@ -3602,6 +3605,9 @@ LINEAR_MAGIC_NUMBER=Caml1999L038
 
 
  # TODO: rename this variable
+
+
+
 
 
 
@@ -24335,6 +24341,44 @@ if test "$ccomp_type" != "msvc"
 then :
   internal_cflags="-g $internal_cflags"
 fi
+
+# The mingw-w64 and MSVC versions of tmpheader.exe are linked with special flags
+# to reduce their size (considerably). In particular, the entry point is
+# overridden, which prevents the linking of crt0.
+case "$toolchain" in #(
+  mingw) :
+    # mingw-w64: optimise header.o for space and remove all unused sections
+    # during linking.
+    header_cflags='-Os'
+    if test "$system" = "mingw"
+then :
+  entrypoint='_wmainCRTStartup'
+else $as_nop
+  entrypoint='wmainCRTStartup'
+fi
+    # Certainly for GCC, -nostdlib automatically adds -nostartfiles (clang's
+    # documentation is not explicit on this point, but it would be unusual for
+    # clang and GCC to differ). --gc-sections removes unreferenced code and data
+    # sections.
+    header_ldflags=\
+"-nostdlib -nostartfiles -Wl,--gc-sections -Wl,-e,$entrypoint"
+    header_libs='-lkernel32' ;; #(
+  msvc) :
+    # MSVC: Optimise header.obj for space. cl doesn't have an equivalent of
+    # -nostdlib, however it also doesn't have default libraries in the same way
+    # as GCC - the equivalent of crt0.o is linked because it provides the entry
+    # point symbol, rather than by being explicitly added to the linking command
+    # line.  /GS- disables compilation of runtime security checks and
+    # /NOCOFFGRPINFO is an undocumented linker flag which removes the debug
+    # directory from the PE+ image.
+    header_cflags='/GS- /Os'
+    header_ldflags='/NOCOFFGRPINFO /subsystem:console'
+    header_libs='kernel32.lib' ;; #(
+  *) :
+    header_cflags=''
+  header_ldflags=''
+  header_libs='' ;;
+esac
 
 oc_cflags="$common_cflags $internal_cflags"
 oc_cppflags="$common_cppflags $internal_cppflags"
