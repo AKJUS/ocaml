@@ -115,7 +115,7 @@ installcross:
 	touch \
 	  $(addprefix toplevel/, \
 	    $(foreach ext,cmi cmt cmti cmx, native/nat__dummy__.$(ext)) \
-	      all__dummy__.cmx topstart.o native/tophooks.cmi)
+	      all__dummy__.cmx topstart.$(O) native/tophooks.cmi)
 	cd lex && $(LN_S) `command -v ocamllex` ocamllex.opt$(EXE)
 	# Real installation
 	$(MAKE) install $(INSTALL_OVERRIDES)
