@@ -1188,7 +1188,7 @@ OCaml 5.5.0
 
 - #14853, CVE-2026-41083, OSEC-2026-05: fix quoting of filenames
    passed to Filename.quote_command on Windows.
-  (David Allsopp, report by Andrew Nesbitt, review by ???)
+  (David Allsopp, report by Andrew Nesbitt, review by Florian Angeletti)
 
 OCaml 5.4.0 (9 October 2025)
 ----------------------------
