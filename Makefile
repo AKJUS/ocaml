@@ -643,10 +643,10 @@ FLEXLINK_BUILD_ENV = \
   MSVC_DETECT=0 OCAML_CONFIG_FILE=../Makefile.config \
   CHAINS=$(FLEXDLL_CHAIN) ROOTDIR=..
 ifneq ($(RC),)
-FLEXLINK_BUILD_ENV += RC=$(RC)
+FLEXLINK_BUILD_ENV += RC="$(RC)"
 endif
 ifneq ($(FLEXDLL_CC_VAR),)
-FLEXLINK_BUILD_ENV += $(FLEXDLL_CC_VAR)=$(CC)
+FLEXLINK_BUILD_ENV += $(FLEXDLL_CC_VAR)="$(CC)"
 endif
 FLEXDLL_SOURCES = \
   $(addprefix $(FLEXDLL_SOURCE_DIR)/, flexdll.c flexdll_initer.c flexdll.h) \
