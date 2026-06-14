@@ -821,6 +821,7 @@ ocaml_prefix
 compute_deps
 build_libraries_manpages
 PACKLD
+flexdll_cc_var
 flexdll_chain
 afl
 oc_native_compflags
@@ -3601,6 +3602,7 @@ LINEAR_MAGIC_NUMBER=Caml1999L038
 
 
  # TODO: rename this variable
+
 
 
 
@@ -15839,18 +15841,23 @@ flexlink_flags=''
 case $target in #(
   x86_64-*-cygwin) :
     flexdll_chain='cygwin64'
+    flexdll_cc_var='CYG64CC'
     flexlink_flags='-merge-manifest -stack 16777216' ;; #(
   i686-w64-mingw32*) :
     flexdll_chain='mingw'
+    flexdll_cc_var='MINCC'
     flexlink_flags='-stack 16777216' ;; #(
   x86_64-w64-mingw32*) :
     flexdll_chain='mingw64'
+    flexdll_cc_var='MIN64CC'
     flexlink_flags='-stack 33554432' ;; #(
   i686-pc-windows) :
     flexdll_chain='msvc'
+    flexdll_cc_var='MSVCC'
     flexlink_flags='-merge-manifest -stack 16777216' ;; #(
   x86_64-pc-windows) :
     flexdll_chain='msvc64'
+    flexdll_cc_var='MSVCC64'
     flexlink_flags='-merge-manifest -stack 33554432' ;; #(
   *) :
     flexdll_chain='' ;;
