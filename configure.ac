@@ -1214,9 +1214,6 @@ AS_IF([test x"$enable_shared" = "xno"],
 # Define flexlink chain and flags correctly for the different Windows ports
 flexlink_flags=''
 AS_CASE([$target],
-  [i686-*-cygwin],
-    [flexdll_chain='cygwin'
-    flexlink_flags='-merge-manifest -stack 16777216'],
   [x86_64-*-cygwin],
     [flexdll_chain='cygwin64'
     flexlink_flags='-merge-manifest -stack 16777216'],
@@ -1672,8 +1669,6 @@ AS_CASE([$target],
     [arch=i386; system=openbsd],
   [[i[3456]86-*-haiku*]],
     [arch=i386; system=beos],
-  [[i[3456]86-*-cygwin]],
-    [arch=i386; system=cygwin],
   [[i[3456]86-w64-mingw32*]],
     [arch=i386; system=mingw],
   [[i[3456]86-*-gnu*]],
