@@ -81,6 +81,7 @@ Working version
 - grouped fixes in the ephemeron runtime
   + #14734: fix ephemeron orphaning (a counterpart of #14722)
   + #14733: clarify the implementation of per-domain ephemeron work counters
+  + #14813: ensure that no orphaned ephemerons remain across GC cycles
   (Gabriel Scherer, review by Damien Doligez)
 
 ### Type system:
