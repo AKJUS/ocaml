@@ -72,16 +72,16 @@ type string_constant =
 
 let empty_str = { str = ""; tag = "" }
 
-module Clflag = struct
+module Parameter = struct
   type t =
     | Principal
     | Rectypes
-    | Classic
+    | Nolabel
 
   let to_string = function
     | Principal -> "Principal"
     | Rectypes -> "Rectypes"
-    | Classic -> "Classic"
+    | Nolabel -> "Nolabel"
 
   module Set = struct
     module T = Set.Make(struct
@@ -98,14 +98,14 @@ module Clflag = struct
       List.fold_left ~f:union
         [ if !Clflags.principal then singleton Principal else empty
         ; if !Clflags.recursive_types then singleton Rectypes else empty
-        ; if !Clflags.classic then singleton Classic else empty
+        ; if !Clflags.classic then singleton Nolabel else empty
         ]
         ~init:empty
 
     let set_current t =
       Clflags.principal := mem Principal t;
       Clflags.recursive_types := mem Rectypes t;
-      Clflags.classic := mem Classic t;
+      Clflags.classic := mem Nolabel t;
       ()
 
     let to_string c =
@@ -119,7 +119,7 @@ module Clflag = struct
             match s with
             | "Principal" -> add Principal acc
             | "Rectypes" -> add Rectypes acc
-            | "Classic" -> add Classic acc
+            | "Nolabel" -> add Nolabel acc
             | other -> Location.raise_errorf ~loc "unknown flag: %s" other)
         ~init:empty (Longident.flatten lid)
   end
@@ -129,13 +129,13 @@ end
 type expectation =
   { extid_loc   : Location.t (* Location of "expect" in "[%%expect ...]" *)
   ; payload_loc : Location.t (* Location of the whole payload *)
-  ; text        : string_constant Clflag.Set.Map.t
+  ; text        : string_constant Parameter.Set.Map.t
   }
 
 let expectation_equal a b =
   a.extid_loc = b.extid_loc &&
   a.payload_loc = b.payload_loc &&
-  Clflag.Set.Map.equal (fun a b -> a.str = b.str && a.tag = b.tag) a.text b.text
+  Parameter.Set.Map.equal (fun a b -> a.str = b.str && a.tag = b.tag) a.text b.text
 
 (* A list of phrases with the expected toplevel output *)
 type chunk =
@@ -153,7 +153,7 @@ end
 module Correction = struct
   type 'a t =
     { corrected_expectations : 'a list
-    ; trailing_output        : string_constant Clflag.Set.Map.t
+    ; trailing_output        : string_constant Parameter.Set.Map.t
     }
 
   module LocationMap = Map.Make(struct
@@ -166,7 +166,7 @@ module Correction = struct
      equals the uncorrected original *)
   let merge clist =
     let merge_text ?(loc = Location.none) a b =
-      Clflag.Set.Map.merge
+      Parameter.Set.Map.merge
         (fun key text1 text2 ->
            match text1, text2 with
            | None, None -> None
@@ -176,7 +176,7 @@ module Correction = struct
                text
            | _ -> Location.raise_errorf
                     ~loc
-                    "conflicting outputs for %s" (Clflag.Set.to_string key)
+                    "conflicting outputs for %s" (Parameter.Set.to_string key)
         ) a b
     in
     let corrected_expectations, trailing_output =
@@ -212,7 +212,7 @@ module Correction = struct
               tmap
               trailing_output
         )
-      ~init:(LocationMap.empty, Clflag.Set.Map.empty)
+      ~init:(LocationMap.empty, Parameter.Set.Map.empty)
       clist
     in
     { corrected_expectations =
@@ -263,8 +263,8 @@ let match_expect_extension (ext : Parsetree.extension) =
                                 ({ txt = clflags_s; _}, None) }
                             , [ Nolabel, b ]) }
                       ->
-                        Clflag.Set.Map.add
-                          (Clflag.Set.of_longident ~loc:b.pexp_loc clflags_s)
+                        Parameter.Set.Map.add
+                          (Parameter.Set.of_longident ~loc:b.pexp_loc clflags_s)
                           (string_constant b)
                           acc
                     | None,
@@ -281,8 +281,8 @@ let match_expect_extension (ext : Parsetree.extension) =
                                 { Parsetree.
                                   pexp_desc = Pexp_construct
                                       ({ txt = cl; _}, None) } ->
-                                  Clflag.Set.Map.add
-                                    (Clflag.Set.of_longident ~loc:b.pexp_loc cl)
+                                  Parameter.Set.Map.add
+                                    (Parameter.Set.of_longident ~loc:b.pexp_loc cl)
                                     str
                                     acc
                               | _ ->
@@ -296,12 +296,12 @@ let match_expect_extension (ext : Parsetree.extension) =
                           ~loc:pe.Parsetree.pexp_loc
                           "expected Constructor{|string|}"
                   )
-                ~init:(Clflag.Set.Map.singleton
-                         Clflag.Set.empty (string_constant normal))
+                ~init:(Parameter.Set.Map.singleton
+                         Parameter.Set.empty (string_constant normal))
                 rest
           | _ ->
               let s = string_constant e in
-              Clflag.Set.Map.singleton Clflag.Set.empty s
+              Parameter.Set.Map.singleton Parameter.Set.empty s
         in
         { extid_loc
         ; payload_loc = e.pexp_loc
@@ -311,7 +311,7 @@ let match_expect_extension (ext : Parsetree.extension) =
         let s = { tag = ""; str = "" } in
         { extid_loc
         ; payload_loc  = { extid_loc with loc_start = extid_loc.loc_end }
-        ; text = Clflag.Set.Map.singleton Clflag.Set.empty s
+        ; text = Parameter.Set.Map.singleton Parameter.Set.empty s
         }
       | _ -> invalid_payload "not an expectation"
     in
@@ -396,11 +396,11 @@ let parse_contents ~fname contents =
 let eval_expectation expectation ~output =
   let s =
     try
-      Clflag.Set.Map.find (Clflag.Set.get_current ()) expectation.text
+      Parameter.Set.Map.find (Parameter.Set.get_current ()) expectation.text
     with
     | Not_found ->
         try
-          Clflag.Set.Map.find Clflag.Set.empty expectation.text
+          Parameter.Set.Map.find Parameter.Set.empty expectation.text
         with
         | Not_found -> empty_str
   in
@@ -408,8 +408,8 @@ let eval_expectation expectation ~output =
   { Corrected.original = expectation
   ; corrected = { expectation with
                   text =
-                    Clflag.Set.Map.singleton
-                      (Clflag.Set.get_current ()) s
+                    Parameter.Set.Map.singleton
+                      (Parameter.Set.get_current ()) s
                 }
   }
 
@@ -515,7 +515,7 @@ let eval_expect_file _fname ~file_contents =
       capture_everything buf ppf ~f:(fun () -> exec_phrases phrases)
   in
   let trailing_output =
-    Clflag.Set.Map.singleton (Clflag.Set.get_current ())
+    Parameter.Set.Map.singleton (Parameter.Set.get_current ())
       { str = trailing_output; tag = "" }
   in
   { Correction.corrected_expectations; trailing_output }
@@ -531,11 +531,11 @@ let output_corrected oc ~file_contents (correction : _ Correction.t) =
   in
   let output_for_all_clflags ?(output_empty=true) map =
     let normal =
-      Clflag.Set.Map.find_opt Clflag.Set.empty map
+      Parameter.Set.Map.find_opt Parameter.Set.empty map
       |> Option.value ~default:empty_str
     in
     let string_to_flags_and_tag =
-      Clflag.Set.Map.fold
+      Parameter.Set.Map.fold
         (fun key body acc ->
            if body = normal then acc
            else String_map.add_to_list body.str (key, body.tag) acc
@@ -547,23 +547,23 @@ let output_corrected oc ~file_contents (correction : _ Correction.t) =
       String_map.fold
         (fun str (clflagss_and_tag) acc ->
            let clflagss =
-             List.sort_uniq ~cmp:Clflag.Set.compare
+             List.sort_uniq ~cmp:Parameter.Set.compare
                (List.map ~f:fst clflagss_and_tag)
            in
            let tag = snd (List.hd clflagss_and_tag) in
            let low_flag = List.hd clflagss in
-           Clflag.Set.Map.add_to_list low_flag (clflagss, { str; tag }) acc
+           Parameter.Set.Map.add_to_list low_flag (clflagss, { str; tag }) acc
         )
         string_to_flags_and_tag
-        Clflag.Set.Map.empty
+        Parameter.Set.Map.empty
     in
     (* don't output empty trailing output *)
-    if (not output_empty) && Clflag.Set.Map.is_empty ordered_by_lowest_flag
+    if (not output_empty) && Parameter.Set.Map.is_empty ordered_by_lowest_flag
        && normal.str = empty_str.str
     then ()
     else begin
       output_body oc normal;
-      Clflag.Set.Map.iter
+      Parameter.Set.Map.iter
         (fun _ list ->
            List.iter ~f:(fun (clflagss, str) ->
                output_string oc ", ";
@@ -572,7 +572,7 @@ let output_corrected oc ~file_contents (correction : _ Correction.t) =
                List.iteri
                  ~f:(fun i clflags ->
                      if i > 0 then output_string oc ", ";
-                     output_string oc (Clflag.Set.to_string clflags))
+                     output_string oc (Parameter.Set.to_string clflags))
                  clflagss;
                if paren then output_string oc ")";
                output_body oc str;
@@ -624,16 +624,16 @@ let process_expect_file ~startup_clflags fname =
     | exception e -> close_in ic; raise e
   in
   let clflags =
-    List.map ~f:Clflag.Set.of_list
-      [ []; [ Clflag.Rectypes]; [ Clflag.Principal ] ]
+    List.map ~f:Parameter.Set.of_list
+      [ []; [ Parameter.Rectypes]; [ Parameter.Principal ] ]
   in
   let warning_state = Warnings.backup () in
   let correction =
     let corrections =
       List.map clflags ~f:(fun clflags ->
-          let local_clflags = Clflag.Set.union startup_clflags clflags in
-          Clflag.Set.set_current local_clflags;
-          Clflag.Set.original := local_clflags;
+          let local_clflags = Parameter.Set.union startup_clflags clflags in
+          Parameter.Set.set_current local_clflags;
+          Parameter.Set.original := local_clflags;
           with_fresh_compiler_state
             ~warning_state
             (fun () ->
@@ -651,7 +651,7 @@ let keep_original_error_size = ref false
 let main fname =
   if not !keep_original_error_size then
     Clflags.error_size := 0;
-  let startup_clflags = Clflag.Set.get_current () in
+  let startup_clflags = Parameter.Set.get_current () in
   Toploop.override_sys_argv
     (Array.sub Sys.argv ~pos:!Arg.current
        ~len:(Array.length Sys.argv - !Arg.current));
