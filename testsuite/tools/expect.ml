@@ -113,15 +113,19 @@ module Parameter = struct
           (if acc = "" then "" else acc ^ ".") ^ to_string cl
         ) c ""
 
-    let of_longident ~loc lid =
-      List.fold_left
-        ~f:(fun acc s ->
-            match s with
-            | "Principal" -> add Principal acc
-            | "Rectypes" -> add Rectypes acc
-            | "Nolabel" -> add Nolabel acc
-            | other -> Location.raise_errorf ~loc "unknown flag: %s" other)
-        ~init:empty (Longident.flatten lid)
+    let rec of_longident ~loc lid =
+      let of_string ~loc = function
+        | "Principal" -> singleton Principal
+        | "Rectypes" -> singleton Rectypes
+        | "Nolabel" -> singleton Nolabel
+        | other -> Location.raise_errorf ~loc "unknown flag: %s" other
+      in
+      match (lid : Longident.t) with
+      | Lident s -> of_string ~loc s
+      | Ldot (lid, s) ->
+          union (of_longident ~loc:lid.loc lid.txt) (of_string ~loc:s.loc s.txt)
+      | Lapply _ ->
+          Location.raise_errorf ~loc "unexpected functor application"
   end
 end
 
@@ -135,7 +139,8 @@ type expectation =
 let expectation_equal a b =
   a.extid_loc = b.extid_loc &&
   a.payload_loc = b.payload_loc &&
-  Parameter.Set.Map.equal (fun a b -> a.str = b.str && a.tag = b.tag) a.text b.text
+  Parameter.Set.Map.equal
+    (fun a b -> a.str = b.str && a.tag = b.tag) a.text b.text
 
 (* A list of phrases with the expected toplevel output *)
 type chunk =
@@ -228,20 +233,65 @@ module Correction = struct
 
 end
 
+let invalid_payload ~loc msg =
+  Location.raise_errorf ~loc
+    "invalid [%%%%expect payload] (%s)" msg
+
+let parse_string_constant (e : Parsetree.expression) =
+  match e.pexp_desc with
+  | Pexp_constant {pconst_desc = Pconst_string (str, _, Some tag); _} ->
+      { str; tag }
+  | _ -> invalid_payload ~loc:e.pexp_loc "not a string"
+
+let parse_and_add_parameters acc =
+  function
+    None
+  , { Parsetree.
+      pexp_desc = Pexp_construct
+          ({ txt = clflags_s; _}, Some b) }
+  | None,
+    { Parsetree.
+      pexp_desc = Pexp_apply
+          ({ pexp_desc = Pexp_construct
+                 ({ txt = clflags_s; _}, None) }
+          , [ Nolabel, b ]) }
+    ->
+      Parameter.Set.Map.add
+        (Parameter.Set.of_longident ~loc:b.pexp_loc clflags_s)
+        (parse_string_constant b)
+        acc
+  | None,
+    { Parsetree.
+      pexp_desc = Pexp_apply
+          ({ pexp_desc = Pexp_tuple clflags_tuple; _ }
+          , [ Nolabel, b ]) }
+    ->
+      let str = parse_string_constant b in
+      List.fold_left
+        ~f:(fun acc ->
+            function
+            | None,
+              { Parsetree.
+                pexp_desc = Pexp_construct
+                    ({ txt = cl; _}, None) } ->
+                Parameter.Set.Map.add
+                  (Parameter.Set.of_longident ~loc:b.pexp_loc cl)
+                  str
+                  acc
+            | _ ->
+                invalid_payload
+                  ~loc:b.pexp_loc
+                  "expected Constructor"
+          )
+        ~init:acc clflags_tuple
+  | _, pe ->
+      invalid_payload
+        ~loc:pe.Parsetree.pexp_loc
+        "expected Constructor{|string|}"
 
 let match_expect_extension (ext : Parsetree.extension) =
   match ext with
   | ({Asttypes.txt="expect"|"ocaml.expect"; loc = extid_loc}, payload) ->
-    let invalid_payload ?(loc = extid_loc) msg =
-      Location.raise_errorf ~loc
-        "invalid [%%%%expect payload] (%s)" msg
-    in
-    let string_constant (e : Parsetree.expression) =
-      match e.pexp_desc with
-      | Pexp_constant {pconst_desc = Pconst_string (str, _, Some tag); _} ->
-        { str; tag }
-      | _ -> invalid_payload ~loc:e.pexp_loc "not a string"
-    in
     let expectation =
       match payload with
       | PStr [{ pstr_desc = Pstr_eval (e, []) }] ->
@@ -251,56 +301,12 @@ let match_expect_extension (ext : Parsetree.extension) =
               ((None, normal)
                :: rest) ->
               List.fold_left
-                ~f:(fun acc -> function
-                      None
-                    , { Parsetree.
-                        pexp_desc = Pexp_construct
-                            ({ txt = clflags_s; _}, Some b) }
-                    | None,
-                      { Parsetree.
-                        pexp_desc = Pexp_apply
-                            ({ pexp_desc = Pexp_construct
-                                ({ txt = clflags_s; _}, None) }
-                            , [ Nolabel, b ]) }
-                      ->
-                        Parameter.Set.Map.add
-                          (Parameter.Set.of_longident ~loc:b.pexp_loc clflags_s)
-                          (string_constant b)
-                          acc
-                    | None,
-                      { Parsetree.
-                        pexp_desc = Pexp_apply
-                            ({ pexp_desc = Pexp_tuple clflags_tuple; _ }
-                            , [ Nolabel, b ]) }
-                      ->
-                        let str = string_constant b in
-                        List.fold_left
-                          ~f:(fun acc ->
-                              function
-                              | None,
-                                { Parsetree.
-                                  pexp_desc = Pexp_construct
-                                      ({ txt = cl; _}, None) } ->
-                                  Parameter.Set.Map.add
-                                    (Parameter.Set.of_longident ~loc:b.pexp_loc cl)
-                                    str
-                                    acc
-                              | _ ->
-                                  invalid_payload
-                                    ~loc:b.pexp_loc
-                                    "expected Constructor"
-                            )
-                          ~init:acc clflags_tuple
-                    | _, pe ->
-                        invalid_payload
-                          ~loc:pe.Parsetree.pexp_loc
-                          "expected Constructor{|string|}"
-                  )
+                ~f:parse_and_add_parameters
                 ~init:(Parameter.Set.Map.singleton
-                         Parameter.Set.empty (string_constant normal))
+                         Parameter.Set.empty (parse_string_constant normal))
                 rest
           | _ ->
-              let s = string_constant e in
+              let s = parse_string_constant e in
               Parameter.Set.Map.singleton Parameter.Set.empty s
         in
         { extid_loc
@@ -313,7 +319,7 @@ let match_expect_extension (ext : Parsetree.extension) =
         ; payload_loc  = { extid_loc with loc_start = extid_loc.loc_end }
         ; text = Parameter.Set.Map.singleton Parameter.Set.empty s
         }
-      | _ -> invalid_payload "not an expectation"
+      | _ -> invalid_payload ~loc:extid_loc "not an expectation"
     in
     Some expectation
   | _ ->
