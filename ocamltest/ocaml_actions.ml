@@ -831,26 +831,19 @@ let run_expect_once input_file log env =
 
 let run_expect_variants input_file log env =
   let corrected filename = Filename.make_filename filename "corrected" in
-  let run prev =
-    match prev with
-    | Ok (input_file, env) ->
-        let (result, env') =
-          run_expect_once input_file log env in
-        if Test_result.is_pass result
-        then Ok (corrected input_file, env')
-        else Error (result, env')
-    | Error _ -> prev
-  in
-  run (Ok (input_file, env))
-  |> function
-  | Ok (output_file, env) ->
-      let output_env = Environments.add_bindings
-          [
-            Builtin_variables.reference, input_file;
-            Builtin_variables.output, output_file
-          ] env in
-      (Test_result.pass, output_env)
-  | Error (result, env) -> (result, env)
+  let (result, env') =
+    run_expect_once input_file log env in
+  if Test_result.is_pass result
+  then begin
+    let output_file = corrected input_file in
+    let output_env = Environments.add_bindings
+        [
+          Builtin_variables.reference, input_file;
+          Builtin_variables.output, output_file
+        ] env in
+    (Test_result.pass, output_env)
+  end
+  else (result, env')
 
 let run_expect log env =
   if Environments.is_variable_defined Ocaml_variables.libraries env then
