@@ -531,6 +531,29 @@ let output_slice oc s a b =
 
 module String_map = Misc.Stdlib.String.Map
 
+let coalesce_outputs_and_order_by_lowest_flag ~normal map =
+  let string_to_flags_and_tag =
+    Parameter.Set.Map.fold
+      (fun key body acc ->
+         if body = normal then acc
+         else String_map.add_to_list body.str (key, body.tag) acc
+      )
+      map
+      String_map.empty
+  in
+  String_map.fold
+    (fun str (clflagss_and_tag) acc ->
+       let clflagss =
+         List.sort_uniq ~cmp:Parameter.Set.compare
+           (List.map ~f:fst clflagss_and_tag)
+       in
+       let tag = snd (List.hd clflagss_and_tag) in
+       let low_flag = List.hd clflagss in
+       Parameter.Set.Map.add_to_list low_flag (clflagss, { str; tag }) acc
+    )
+    string_to_flags_and_tag
+    Parameter.Set.Map.empty
+
 let output_corrected oc ~file_contents (correction : _ Correction.t) =
   let output_body oc { str; tag } =
     Printf.fprintf oc "{%s|%s|%s}" tag str tag
@@ -540,28 +563,8 @@ let output_corrected oc ~file_contents (correction : _ Correction.t) =
       Parameter.Set.Map.find_opt Parameter.Set.empty map
       |> Option.value ~default:empty_str
     in
-    let string_to_flags_and_tag =
-      Parameter.Set.Map.fold
-        (fun key body acc ->
-           if body = normal then acc
-           else String_map.add_to_list body.str (key, body.tag) acc
-        )
-        map
-        String_map.empty
-    in
     let ordered_by_lowest_flag =
-      String_map.fold
-        (fun str (clflagss_and_tag) acc ->
-           let clflagss =
-             List.sort_uniq ~cmp:Parameter.Set.compare
-               (List.map ~f:fst clflagss_and_tag)
-           in
-           let tag = snd (List.hd clflagss_and_tag) in
-           let low_flag = List.hd clflagss in
-           Parameter.Set.Map.add_to_list low_flag (clflagss, { str; tag }) acc
-        )
-        string_to_flags_and_tag
-        Parameter.Set.Map.empty
+      coalesce_outputs_and_order_by_lowest_flag ~normal map
     in
     (* don't output empty trailing output *)
     if (not output_empty) && Parameter.Set.Map.is_empty ordered_by_lowest_flag
