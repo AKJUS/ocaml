@@ -167,50 +167,50 @@ module Correction = struct
       let compare = compare
     end)
 
+  let merge_text ?(loc = Location.none) a b =
+    Parameter.Set.Map.merge
+      (fun key text1 text2 ->
+         match text1, text2 with
+         | None, None -> None
+         | text, None | None, text -> text
+         | Some text1 as text, Some text2 when text1 = text2 ->
+             text
+         | _ -> Location.raise_errorf
+                  ~loc
+                  "conflicting outputs for %s" (Parameter.Set.to_string key)
+      ) a b
+
+  let merge_corrected acc { Corrected.original; corrected } =
+    LocationMap.update
+      original.extid_loc
+      (function
+        | None ->
+            Some { Corrected.original; corrected }
+        | Some { Corrected.original; corrected = corrected' } ->
+            let text =
+              merge_text
+                ~loc:original.extid_loc
+                corrected.text
+                corrected'.text
+            in
+            Some
+              { Corrected.original
+              ; corrected =
+                  { original with
+                    text
+                  }
+              }
+      )
+      acc
+
   (* merge expectations, filtering out any where the merged expectation
      equals the uncorrected original *)
   let merge clist =
-    let merge_text ?(loc = Location.none) a b =
-      Parameter.Set.Map.merge
-        (fun key text1 text2 ->
-           match text1, text2 with
-           | None, None -> None
-           | (Some _ as text, None)
-           | None, (Some _ as text) -> text
-           | Some text1 as text, Some text2 when text1 = text2 ->
-               text
-           | _ -> Location.raise_errorf
-                    ~loc
-                    "conflicting outputs for %s" (Parameter.Set.to_string key)
-        ) a b
-    in
     let corrected_expectations, trailing_output =
       List.fold_left
         ~f:(fun (cmap, tmap) { corrected_expectations; trailing_output } ->
             List.fold_left
-              ~f:(fun acc { Corrected.original; corrected } ->
-                  LocationMap.update
-                    original.extid_loc
-                    (function
-                      | None ->
-                          Some { Corrected.original; corrected }
-                      | Some { Corrected.original; corrected = corrected' } ->
-                          let text =
-                            merge_text
-                              ~loc:original.extid_loc
-                              corrected.text
-                              corrected'.text
-                          in
-                          Some
-                            { Corrected.original
-                            ; corrected =
-                                { original with
-                                  text
-                                }
-                            }
-                    )
-                    acc
-                )
+              ~f:merge_corrected
               ~init:cmap
               corrected_expectations
           , merge_text
@@ -529,7 +529,7 @@ let eval_expect_file _fname ~file_contents =
 let output_slice oc s a b =
   output_string oc (String.sub s ~pos:a ~len:(b - a))
 
-module String_map = Map.Make(String)
+module String_map = Misc.Stdlib.String.Map
 
 let output_corrected oc ~file_contents (correction : _ Correction.t) =
   let output_body oc { str; tag } =
