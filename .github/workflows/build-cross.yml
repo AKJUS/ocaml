@@ -66,7 +66,7 @@ jobs:
           path: /tmp/ocaml.tar.zst
           retention-days: 1
 
-  cross-windows:
+  cross-x86_64-w64-mingw32:
     runs-on: ubuntu-latest
     needs: non-cross
     steps:
@@ -115,7 +115,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
         with:
-          name: windows-executable
+          name: x86_64-w64-mingw32-executable
           path: example.exe
           retention-days: 1
       - name: Test cross sak
@@ -128,19 +128,19 @@ jobs:
           runtime/sak encode-C-utf8-literal "$TESTDIR" > utf8
           git diff --no-index utf8.ref utf8
 
-  run-windows:
+  run-x86_64-w64-mingw32:
     runs-on: windows-latest
-    needs: cross-windows
+    needs: cross-x86_64-w64-mingw32
     steps:
       - name: Download Artifact
         uses: actions/download-artifact@v8
         with:
-          name: windows-executable
+          name: x86_64-w64-mingw32-executable
       - name: Run example program
         run: |
           .\example.exe
 
-  cross-arm-linux:
+  cross-aarch64-linux-gnu:
     runs-on: ubuntu-latest
     needs: non-cross
     steps:
@@ -197,7 +197,7 @@ jobs:
           runtime/sak encode-C-utf8-literal "$TESTDIR" > utf8
           git diff --no-index utf8.ref utf8
 
-  cross-android:
+  cross-x86_64-linux-android21:
     runs-on: ubuntu-latest
     needs: non-cross
     env:
