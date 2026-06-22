@@ -377,8 +377,8 @@ Working version
   (Pierre Chambart, report by Nathanaëlle Courant and
    Vincent Laviron review by Vincent Laviron)
 
-OCaml 5.5.0
------------
+OCaml 5.5.0 (19 June 2026)
+-------------------------
 
 (Changes that can break existing programs are marked with a "*")
 
