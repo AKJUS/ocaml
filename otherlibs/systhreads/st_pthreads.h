@@ -40,6 +40,7 @@ static int st_thread_create(st_thread_id * res,
   if (res == NULL) pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
   rc = pthread_create(&thr, &attr, fn, arg);
   if (res != NULL) *res = thr;
+  (void)pthread_attr_destroy(&attr);
   return rc;
 }
 
