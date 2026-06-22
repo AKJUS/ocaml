@@ -83,6 +83,7 @@ Working version
   (Gabriel Scherer, review by Olivier Nicole)
 
 - grouped fixes in the ephemeron runtime
+  + #14745: testsuite examples inspired from Jan Midtgaard's repro cases
   + #14734: fix ephemeron orphaning (a counterpart of #14722)
   + #14733: clarify the implementation of per-domain ephemeron work counters
   + #14813: ensure that no orphaned ephemerons remain across GC cycles
