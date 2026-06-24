@@ -283,3 +283,40 @@ type t = external {a|\\\|a};;
 [%%expect{|
 type t = external "\\\\\\"
 |}]
+
+(* manifest *)
+module type P = sig
+  type t = external "p"
+end
+module Q(P : P) : P with type t = P.t = struct
+  type t = P.t
+end;;
+[%%expect{|
+module type P = sig type t = external "p" end
+Uncaught exception: Typemod.Error.In_context(_, _, _)
+
+|}]
+
+module type P1 = sig
+  type !'b t = external "p"
+end
+module Q(P1 : P1) : P1 with type 'a t = 'a P1.t = struct
+  type 'a t = 'a P1.t
+end;;
+[%%expect{|
+module type P1 = sig type !'b t = external "p" end
+Uncaught exception: Typemod.Error.In_context(_, _, _)
+
+|}]
+
+module type P1 = sig
+  type +'b t = external "p"
+end
+module Q(P1 : P1) : P1 with type 'a t = 'a P1.t = struct
+  type 'a t = 'a P1.t
+end;;
+[%%expect{|
+module type P1 = sig type +!'b t = external "p" end
+Uncaught exception: Typemod.Error.In_context(_, _, _)
+
+|}]
