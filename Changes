@@ -379,6 +379,10 @@ Working version
   (Pierre Chambart, report by Nathanaëlle Courant and
    Vincent Laviron review by Vincent Laviron)
 
+- #14881, #14882: fix printing of external types that are subject to module
+  constraints.
+  (Stefan Muenzel, review by ???)
+
 OCaml 5.5.0 (19 June 2026)
 -------------------------
 

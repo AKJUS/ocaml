@@ -293,8 +293,20 @@ module Q(P : P) : P with type t = P.t = struct
 end;;
 [%%expect{|
 module type P = sig type t = external "p" end
-Uncaught exception: Typemod.Error.In_context(_, _, _)
-
+Lines 4-6, characters 40-3:
+4 | ........................................struct
+5 |   type t = P.t
+6 | end..
+Error: Signature mismatch:
+       Modules do not match:
+         sig type t = P.t end
+       is not included in
+         sig type t = external "p" end
+       Type declarations do not match:
+         type t = P.t
+       is not included in
+         type t = external "p"
+       The first is abstract, but the second is external "p".
 |}]
 
 module type P1 = sig
@@ -305,8 +317,20 @@ module Q(P1 : P1) : P1 with type 'a t = 'a P1.t = struct
 end;;
 [%%expect{|
 module type P1 = sig type !'b t = external "p" end
-Uncaught exception: Typemod.Error.In_context(_, _, _)
-
+Lines 4-6, characters 50-3:
+4 | ..................................................struct
+5 |   type 'a t = 'a P1.t
+6 | end..
+Error: Signature mismatch:
+       Modules do not match:
+         sig type !'a t = 'a P1.t end
+       is not included in
+         sig type !'a t = external "p" end
+       Type declarations do not match:
+         type !'a t = 'a P1.t
+       is not included in
+         type !'a t = external "p"
+       The first is abstract, but the second is external "p".
 |}]
 
 module type P1 = sig
@@ -317,6 +341,18 @@ module Q(P1 : P1) : P1 with type 'a t = 'a P1.t = struct
 end;;
 [%%expect{|
 module type P1 = sig type +!'b t = external "p" end
-Uncaught exception: Typemod.Error.In_context(_, _, _)
-
+Lines 4-6, characters 50-3:
+4 | ..................................................struct
+5 |   type 'a t = 'a P1.t
+6 | end..
+Error: Signature mismatch:
+       Modules do not match:
+         sig type +!'a t = 'a P1.t end
+       is not included in
+         sig type +!'a t = external "p" end
+       Type declarations do not match:
+         type +!'a t = 'a P1.t
+       is not included in
+         type +!'a t = external "p"
+       The first is abstract, but the second is external "p".
 |}]
