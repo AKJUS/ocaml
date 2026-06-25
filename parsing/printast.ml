@@ -742,7 +742,7 @@ and module_type i ppf x =
       line i ppf "Pmty_typeof\n";
       module_expr i ppf m;
   | Pmty_extension (s, arg) ->
-      line i ppf "Pmod_extension \"%s\"\n" s.txt;
+      line i ppf "Pmty_extension \"%s\"\n" s.txt;
       payload i ppf arg
 
 and signature i ppf x = list i signature_item ppf x
