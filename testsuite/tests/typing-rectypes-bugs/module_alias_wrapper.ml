@@ -28,7 +28,7 @@ type any = Any : 'a t -> any
 let hang (f : any -> bool) (v : any) : bool =
   match v with
   | Any A a -> f (Any a)
-[%%expect{|
+[%%expect{||}, (Principal.Rectypes, Rectypes){|
 module Empty : sig end
 module Empty_wrapper : sig module Empty = Empty end
 module Make :

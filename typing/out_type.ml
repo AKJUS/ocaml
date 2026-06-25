@@ -808,6 +808,7 @@ end
 
 module Variable_names : sig
   val reset_names : unit -> unit
+  val reset_weak_names : unit -> unit
 
   val add_subst : (type_expr * type_expr) list -> unit
 
@@ -848,6 +849,11 @@ end = struct
     name_counter := 0;
     named_vars := [];
     visited_for_named_vars := []
+
+  let reset_weak_names () =
+    named_weak_vars := String.Set.empty;
+    weak_var_map := TypeMap.empty;
+    weak_counter := 1
 
   let add_named_var tty =
     match tty.desc with
@@ -1068,6 +1074,8 @@ let reset_except_conflicts () =
 let reset () =
   Ident_conflicts.reset ();
   reset_except_conflicts ()
+
+let reset_weak_names () = Variable_names.reset_weak_names ()
 
 let prepare_for_printing tyl =
   reset_except_conflicts ();
