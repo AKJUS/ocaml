@@ -500,6 +500,10 @@ let emit_instr env i =
   | Lop (Idls_get) ->
       let ofs = Domainstate.(idx_of_field Domain_dls_root) * 8 in
       `	ld	{emit_reg i.res.(0)}, {emit_int ofs}({emit_reg reg_domain_state_ptr})\n`
+  | Lop (Iatomic_fetch_add) ->
+      (* amoadd.d.aqrl carries both acquire and release ordering, so no
+         trailing fence is needed. *)
+      `	amoadd.d.aqrl	{emit_reg i.res.(0)}, {emit_reg i.arg.(1)}, ({emit_reg i.arg.(0)})\n`
   | Lop (Ireturn_addr) ->
       let n = frame_size env in
       if env.f.fun_frame_required then

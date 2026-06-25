@@ -568,7 +568,7 @@ let rec transl env e =
       | ((Pfield_computed|Psequand
          | Prunstack | Pperform | Presume | Preperform
          | Pdls_get
-         | Patomic_load
+         | Patomic_load | Patomic_fetch_add
          | Psequor | Pnot | Pnegint | Paddint | Psubint
          | Pmulint | Pandint | Porint | Pxorint | Plslint
          | Plsrint | Pasrint | Pintoffloat | Pfloatofint
@@ -918,7 +918,7 @@ and transl_prim_1 env p arg dbg =
     | Pbigarrayref (_, _, _, _) | Pbigarrayset (_, _, _, _)
     | Pbigarraydim _ | Pstring_load _ | Pbytes_load _ | Pbytes_set _
     | Pbigstring_load _ | Pbigstring_set _
-    | Patomic_load
+    | Patomic_load | Patomic_fetch_add
     )
     ->
       fatal_errorf "Cmmgen.transl_prim_1: %a"
@@ -1111,7 +1111,7 @@ and transl_prim_2 env p arg1 arg2 dbg =
   | Parraysets _ | Pbintofint _ | Pintofbint _ | Pcvtbint (_, _)
   | Pnegbint _ | Pbigarrayref (_, _, _, _) | Pbigarrayset (_, _, _, _)
   | Pbigarraydim _ | Pbytes_set _ | Pbigstring_set _ | Pbbswap _ | Ppoll
-  | Pmakelazyblock _
+  | Patomic_fetch_add | Pmakelazyblock _
     ->
       fatal_errorf "Cmmgen.transl_prim_2: %a"
         Printclambda_primitives.primitive p
@@ -1161,6 +1161,16 @@ and transl_prim_3 env p arg1 arg2 arg3 dbg =
            [Cconst_symbol ("caml_runstack", dbg);
            transl env arg1; transl env arg2; transl env arg3],
            dbg)
+
+  | Patomic_fetch_add ->
+      let ptr = transl env arg1 in
+      let ofs = transl env arg2 in
+      let incr = transl env arg3 in
+      (* incr is a tagged integer (2*n+1). The atomic add must operate on
+         the tagged representation: add 2*n = incr - 1 to the field. *)
+      let raw_incr = Cop(Csubi, [incr; Cconst_int(1, dbg)], dbg) in
+      Cop(Catomic_fetch_add,
+          [field_address_computed ptr ofs dbg; raw_incr], dbg)
 
   | Presume ->
       Cop (Capply typ_val,

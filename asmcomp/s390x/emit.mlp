@@ -424,6 +424,9 @@ let emit_instr env i =
           | Double -> "stdy" in
         emit_load_store storeinstr addr i.arg 1 i.arg.(0)
 
+    | Lop(Iatomic_fetch_add) ->
+        `	laag	{emit_reg i.res.(0)}, {emit_reg i.arg.(1)}, 0({emit_reg i.arg.(0)})\n`
+
     | Lop(Ialloc { bytes = n; dbginfo }) ->
         let lbl_frame_lbl = record_frame_label env i.live (Dbg_alloc dbginfo) in
         if env.f.fun_fast then begin

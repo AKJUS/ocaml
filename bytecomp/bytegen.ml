@@ -166,7 +166,7 @@ let preserve_tailcall_for_prim = function
   | Pbytes_set_64 _ | Pbigstring_load_16 _ | Pbigstring_load_32 _
   | Pbigstring_load_64 _ | Pbigstring_set_16 _ | Pbigstring_set_32 _
   | Pbigstring_set_64 _ | Pctconst _ | Pbswap16 | Pbbswap _ | Pint_as_pointer
-  | Patomic_load
+  | Patomic_load | Patomic_fetch_add
   | Pdls_get ->
       false
 
@@ -527,6 +527,7 @@ let comp_primitive stack_info p sz args =
   | Pbytes_to_string -> Kccall("caml_string_of_bytes", 1, None)
   | Pbytes_of_string -> Kccall("caml_bytes_of_string", 1, None)
   | Patomic_load -> Kccall("caml_atomic_load_field", 2, None)
+  | Patomic_fetch_add -> Kccall("caml_atomic_fetch_add_field", 3, None)
   | Pdls_get -> Kccall("caml_domain_dls_get", 1, None)
   | Ppoll -> Kccall("caml_process_pending_actions_with_root", 1, None)
   (* The cases below are handled in [comp_expr] before the [comp_primitive] call
