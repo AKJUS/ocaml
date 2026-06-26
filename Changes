@@ -261,6 +261,8 @@ Working version
 - #14598: Add `@since` annotations to `Runtime_events`. (Raphaël Proust)
 
 ### Compiler user-interface and warnings:
+- #14887: More concise messages for the non-exhaustiveness warning.
+  (Luc Maranget, review by Florian Angeletti)
 
 - #14051: Improved error messages for first-class modules with a missing
   constrained type.
