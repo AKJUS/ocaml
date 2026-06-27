@@ -462,17 +462,17 @@ let no_loc = Debuginfo.Scoped_location.Loc_unknown
 type splitting_env = {
   block_var : Ident.t;
   local_idents : Ident.Set.t;
-  renamings : Ident.t Ident.Map.t;
+  inlined : lambda Ident.Map.t;
 }
 
 let rec split_static_function env lam :
   Lambda.lambda split_result =
   match lam with
   | Lvar v ->
-    let v =
-      match Ident.Map.find_opt v env.renamings with
-      | Some v' -> v'
-      | None -> v
+    let var_code =
+      match Ident.Map.find_opt v env.inlined with
+      | Some def -> def
+      | None -> Lvar v
     in
     (* Eta-expand *)
     (* Note: knowing the arity might let us generate slightly better code *)
@@ -502,9 +502,10 @@ let rec split_static_function env lam :
     in
     let lifted = { lfun = wrapper; free_vars_block_size = 1 } in
     Reachable (lifted,
-               Lprim (Pmakeblock (0, lifted_block_mut, None), [Lvar v], no_loc))
+               Lprim (Pmakeblock (0, lifted_block_mut, None),
+                      [var_code], no_loc))
   | Lfunction lfun ->
-    let body = Lambda.rename env.renamings lfun.body in
+    let body = Lambda.subst (fun _ _ env -> env) env.inlined lfun.body in
     let free_vars = Lambda.free_variables body in
     let local_free_vars = Ident.Set.inter free_vars env.local_idents in
     let free_vars_block_size, subst, block_fields_rev =
@@ -538,13 +539,13 @@ let rec split_static_function env lam :
     (* We need the right-hand side of the renamings map to not mention
        any variable from the left-hand side, so we apply previous
        renamings eagerly *)
-    let var_right_renamed =
-      match Ident.Map.find_opt var_right env.renamings with
-      | None -> var_right
-      | Some v -> v
+    let inlined_rhs =
+      match Ident.Map.find_opt var_right env.inlined with
+      | None -> Lvar var_right
+      | Some e -> e
     in
-    let renamings = Ident.Map.add var_left var_right_renamed env.renamings in
-    let+ body = split_static_function { env with renamings } body in
+    let inlined = Ident.Map.add var_left inlined_rhs env.inlined in
+    let+ body = split_static_function { env with inlined } body in
     (* The [body] here is the expression for the closure block. We could apply
        the renaming to it too, but it would be a bit tedious (and of non-linear
        complexity) so instead we keep the original binding.
@@ -885,7 +886,7 @@ let compile_letrec input_bindings body =
               let env = {
                 block_var = ctx_id;
                 local_idents = Ident.Set.empty;
-                renamings = Ident.Map.empty;
+                inlined = Ident.Map.empty;
               } in
               begin match split_static_function env def with
               | Unreachable ->
