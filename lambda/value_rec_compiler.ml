@@ -534,27 +534,26 @@ let rec split_static_function env lam :
              no_loc)
     in
     Reachable (lifted, block)
-  | Llet (lkind, vkind, var_left, Lvar var_right, body) ->
-    (* Simple renaming: use direct substitution *)
-    (* We need the right-hand side of the renamings map to not mention
-       any variable from the left-hand side, so we apply previous
-       renamings eagerly *)
-    let inlined_rhs =
-      match Ident.Map.find_opt var_right env.inlined with
-      | None -> Lvar var_right
-      | Some e -> e
-    in
-    let inlined = Ident.Map.add var_left inlined_rhs env.inlined in
-    let+ body = split_static_function { env with inlined } body in
-    (* The [body] here is the expression for the closure block. We could apply
-       the renaming to it too, but it would be a bit tedious (and of non-linear
-       complexity) so instead we keep the original binding.
-       (All occurrences of [var_left] have disappeared from the lifted function,
-       but occurrences can remain in [body].) *)
-    Llet (lkind, vkind, var_left, Lvar var_right, body)
   | Llet (lkind, vkind, var, def, body) ->
-    let local_idents = Ident.Set.add var env.local_idents in
-    let+ body = split_static_function { env with local_idents } body in
+    let env' =
+      match def with
+      | Lvar var_right ->
+        (* Simple renaming: use direct substitution *)
+        (* We need the right-hand side to not mention any inlined
+           variable, so we apply previous inlinings eagerly. *)
+        let inlined_rhs =
+          match Ident.Map.find_opt var_right env.inlined with
+          | None -> Lvar var_right
+          | Some e -> e
+        in
+        let inlined = Ident.Map.add var inlined_rhs env.inlined in
+        { env with inlined }
+      | _ ->
+        (* Otherwise: add to local closure environment *)
+        let local_idents = Ident.Set.add var env.local_idents in
+        { env with local_idents }
+    in
+    let+ body = split_static_function env' body in
     Llet (lkind, vkind, var, def, body)
   | Lmutlet (vkind, var, def, body) ->
     let local_idents = Ident.Set.add var env.local_idents in
