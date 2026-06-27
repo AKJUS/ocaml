@@ -73,7 +73,22 @@ val foo : unit -> 'a = <fun>
 val bar : unit -> 'a = <fun>
 |}];;
 
-(* A case not currently handled, for reference *)
+(* Examples with module projections (global and local) *)
+
+let rec bar =
+  let __0 = Hashtbl.hash in
+  fun () -> __0
+[%%expect {|
+(let (letrec_function_context/2 = (caml_alloc_dummy 0))
+  (letrec
+    (bar/1 (function param/4[int] (field_imm 29 (global Stdlib__Hashtbl!))))
+    (seq
+      (caml_update_dummy letrec_function_context/2
+        (let (__0/1 = (field_imm 29 (global Stdlib__Hashtbl!)))
+          (makeblock 0)))
+      (apply (field_mut 1 (global Toploop!)) "bar" bar/1))))
+val bar : unit -> 'a -> int = <fun>
+|}]
 
 module M = struct let x = 0 end
 
@@ -81,32 +96,33 @@ let rec baz =
   let x = M.x in
   fun () -> x
 [%%expect {|
-(apply (field_mut 1 (global Toploop!)) "M/421"
+(apply (field_mut 1 (global Toploop!)) "M/466"
   (let (x/1 =[int] 0) (makeblock 0 x/1)))
 module M : sig val x : int end
 (let
-  (M/0 = (apply (field_mut 0 (global Toploop!)) "M/421")
-   letrec_function_context/2 = (caml_alloc_dummy 1))
-  (letrec
-    (baz/0
-       (function param/4[int] : int (field_imm 0 letrec_function_context/2)))
+  (M/0 = (apply (field_mut 0 (global Toploop!)) "M/466")
+   letrec_function_context/3 = (caml_alloc_dummy 0))
+  (letrec (baz/0 (function param/5[int] : int (field_imm 0 M/0)))
     (seq
-      (caml_update_dummy letrec_function_context/2
-        (let (x/2 =[int] (field_imm 0 M/0)) (makeblock 0 x/2)))
+      (caml_update_dummy letrec_function_context/3
+        (let (x/2 =[int] (field_imm 0 M/0)) (makeblock 0)))
       (apply (field_mut 1 (global Toploop!)) "baz" baz/0))))
 val baz : unit -> int = <fun>
 |}];;
+
+
+(* Some case not currently handled, for reference. *)
 
 let rec foobar =
   let x = (1, 2) in
   let z = x in
   fun () -> z
 [%%expect {|
-(let (letrec_function_context/3 = (caml_alloc_dummy 1))
+(let (letrec_function_context/4 = (caml_alloc_dummy 1))
   (letrec
-    (foobar/0 (function param/5[int] (field_imm 0 letrec_function_context/3)))
+    (foobar/0 (function param/6[int] (field_imm 0 letrec_function_context/4)))
     (seq
-      (caml_update_dummy letrec_function_context/3
+      (caml_update_dummy letrec_function_context/4
         (let (x/3 = [0: 1 2] z/1 = x/3) (makeblock 0 x/3)))
       (apply (field_mut 1 (global Toploop!)) "foobar" foobar/0))))
 val foobar : unit -> int * int = <fun>
